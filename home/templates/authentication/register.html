@@ -1,0 +1,126 @@
+{% extends "Home/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+  <div class="content container-fluid">
+
+    <div class="page-header">
+      <div class="row align-items-center">
+        <div class="col">
+          <h3 class="page-title">Manage Students</h3>
+          <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'index' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Manage Students</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+      <div class="alert alert-info">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="get" class="card p-3 mb-2">
+      <div class="row">
+
+        <div class="col-md-3">
+          <label class="focus-label">Discipline</label>
+          <select class="form-control" name="discipline" id="discipline">
+            <option value="">All Disciplines</option>
+            {% for discipline in disciplines %}
+            <option value="{{ discipline.id }}"
+              {% if selected_discipline and selected_discipline.id == discipline.id %}selected{% endif %}>
+              {{ discipline.field }} ({{ discipline.program }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label>Batch</label>
+          <select name="batch" class="form-control">
+            <option value="">All Batches</option>
+            {% for b in batches %}
+            <option value="{{ b.id }}" {% if b.id|stringformat:"s" == request.GET.batch %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label>Semester</label>
+          <select name="semester" class="form-control">
+            <option value="">All Semesters</option>
+            {% for s in semesters %}
+            <option value="{{ s.id }}" {% if s.id|stringformat:"s" == request.GET.semester %}selected{% endif %}>{{ s.number }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label>Section</label>
+          <select name="section" class="form-control">
+            <option value="">All Sections</option>
+            {% for sec in sections %}
+            <option value="{{ sec.id }}" {% if sec.id|stringformat:"s" == request.GET.section %}selected{% endif %}>{{ sec.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2 align-self-end">
+          <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+
+      </div>
+    </form>
+
+    <div class="card">
+      <div class="card-body table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Student</th>
+              <th>Email</th>
+              <th>Discipline</th>
+              <th>Batch</th>
+              <th>Semester</th>
+              <th>Section</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td>{{ student.id }}</td>
+              <td>{{ student.first_name }} {{ student.last_name }}</td>
+              <td>{{ student.email }}</td>
+              <td>{{ student.discipline.name }}</td>
+              <td>{{ student.batch.name }}</td>
+              <td>{{ student.semester.name }}</td>
+              <td>{{ student.section.name }}</td>
+              <td>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="student_id" value="{{ student.id }}">
+                  <button type="submit" class="btn btn-sm btn-success">Generate & Send</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center">No students found</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

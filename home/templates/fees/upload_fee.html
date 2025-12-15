@@ -1,0 +1,399 @@
+{% extends "Home/base.html" %}
+{% load static %}
+{% block body %}
+
+<div class="page-wrapper">
+    <div class="content container-fluid">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Upload Fees</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'fee_list' %}">Fee Management</a></li>
+                        <li class="breadcrumb-item active">Upload Fees</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title"><span>Fee Information</span></h5>
+                                </div>
+
+                                <!-- Discipline -->
+                                <div class="col-sm-6 col-md-3">
+                                    <label>Discipline</label>
+                                    <select class="form-control" name="discipline" id="disciplineSelect" required>
+                                        <option value="">Select Discipline</option>
+                                        {% for disc in disciplines %}
+                                            <option value="{{ disc.id }}" {% if request.POST.discipline == disc.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ disc.field }} ({{ disc.program }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Batch -->
+                                <div class="col-sm-6 col-md-3">
+                                    <label>Batch</label>
+                                    <select class="form-control" name="batch" id="batchSelect" required>
+                                        <option value="">Select Batch</option>
+                                        {% for b in batches %}
+                                            <option value="{{ b.id }}" data-discipline="{{ b.discipline.id }}" {% if request.POST.batch == b.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ b.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Section -->
+                                <div class="col-sm-6 col-md-3">
+                                    <label>Section</label>
+                                    <select class="form-control" name="section" id="sectionSelect" required>
+                                        <option value="">Select Section</option>
+                                        {% for s in sections %}
+                                            <option value="{{ s.id }}" data-batch="{{ s.batch.id }}" {% if request.POST.section == s.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ s.name }} ({{ s.batch.name }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Semester (from Semester model) -->
+                                <div class="col-sm-6 col-md-3">
+                                    <label>Semester (Academic)</label>
+                                    <select class="form-control" name="semester" id="semesterSelect" required>
+                                        <option value="">Select Semester</option>
+                                        {% for sem in semesters %}
+                                            <option value="{{ sem.id }}" {% if request.POST.semester == sem.id|stringformat:"s" %}selected{% endif %}>
+                                                Semester {{ sem.number }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Semester Option (for fee upload - numeric 1-8) -->
+                                <div class="col-12 col-sm-6 mt-2">
+                                    <label>Semester Fee For (1-8)</label>
+                                    <select name="semester_option" class="form-control" required>
+                                        <option value="">Select Semester Number</option>
+                                        {% for i in "12345678" %}
+                                            <option value="{{ forloop.counter }}" {% if request.POST.semester_option == forloop.counter|stringformat:"s" %}selected{% endif %}>
+                                                Semester {{ forloop.counter }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-muted">Which semester fee is being uploaded</small>
+                                </div>
+
+                                <!-- Amount -->
+                                <div class="col-12 col-sm-6 mt-2">
+                                    <label>Base Amount (PKR)</label>
+                                    <input type="number" name="amount" id="globalBaseAmount" class="form-control" value="{{ request.POST.amount }}" required step="0.01">
+                                </div>
+
+                                <!-- Due Date -->
+                                <div class="col-12 col-sm-6 mt-2">
+                                    <label>Due Date</label>
+                                    <input type="date" name="due_date" class="form-control" value="{{ request.POST.due_date }}" required>
+                                </div>
+
+                                <!-- Late Fine Amount -->
+                                <div class="col-12 col-sm-6 mt-2">
+                                    <label>Late Fine Amount (PKR)</label>
+                                    <input type="number" name="fine_amount" id="globalFineAmount" class="form-control" value="{{ request.POST.fine_amount|default:'5000' }}" step="0.01" required>
+                                    <small class="text-muted">Fine amount to display in fee list</small>
+                                </div>
+
+                                <!-- Fine Type -->
+                                <div class="col-12 col-sm-6 mt-2">
+                                    <label>Fine Type</label>
+                                    <select name="fine_type" class="form-control" required>
+                                        <option value="optional" {% if request.POST.fine_type == "optional" %}selected{% endif %}>Optional (Applied only if paid after due date)</option>
+                                        <option value="mandatory" {% if request.POST.fine_type == "mandatory" %}selected{% endif %}>Mandatory (Always included in total)</option>
+                                    </select>
+                                    <small class="text-muted">Choose how fine should be handled</small>
+                                </div>
+
+                                <!-- Grace Period (for optional fine) -->
+                                <div class="col-12 col-sm-6 mt-2" id="gracePeriodField">
+                                    <label>Apply Fine After (Days)</label>
+                                    <input type="number" name="grace_period_days" class="form-control" value="{{ request.POST.grace_period_days|default:'7' }}" min="0">
+                                    <small class="text-muted">Number of days after due date before fine applies</small>
+                                </div>
+
+                                <div class="col-12 mt-3">
+                                    <button name="load_students" value="1" class="btn btn-info">Load Students</button>
+                                </div>
+                            </div>
+
+                            {% if students %}
+                                <hr>
+                                <div class="alert alert-primary">
+                                    <h5>Fee Summary</h5>
+                                    <p><strong>Semester:</strong> {{ semester_option_name|default:"Not selected" }}</p>
+                                    <p><strong>Base Amount:</strong> PKR {{ request.POST.amount|default:"0" }}</p>
+                                    <p><strong>Late Fine Amount:</strong> PKR {{ request.POST.fine_amount|default:"5000" }}</p>
+                                    <p><strong>Fine Type:</strong> {{ request.POST.fine_type|default:"optional"|title }}</p>
+                                    {% if request.POST.fine_type != "mandatory" %}
+                                    <p><strong>Grace Period:</strong> {{ request.POST.grace_period_days|default:"7" }} days after due date</p>
+                                    {% endif %}
+                                    <p><strong>Due Date:</strong> {{ request.POST.due_date }}</p>
+                                    <p><strong>Total Students:</strong> {{ students|length }}</p>
+                                </div>
+                                
+                                <h5>Students List</h5>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Student ID</th>
+                                            <th>Student Name</th>
+                                            <th>Current Semester</th>
+                                            <th>Base Amount (PKR)</th>
+                                            <th>Fine Amount (PKR)</th>
+                                            <th>Total Amount (PKR)</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for st in students %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ st.student_id }}</td>
+                                                <td>{{ st.first_name }} {{ st.last_name }}</td>
+                                                <td>Semester {{ st.current_semester }}</td>
+                                                <td>
+                                                    <input type="hidden" name="student_ids" value="{{ st.id }}">
+                                                    <input type="number" 
+                                                           name="base_amount_{{ st.id }}" 
+                                                           value="{{ request.POST.amount }}" 
+                                                           step="0.01" 
+                                                           class="form-control base-amount" 
+                                                           required>
+                                                </td>
+                                                <td>
+                                                    <input type="number" 
+                                                           name="fine_amount_{{ st.id }}" 
+                                                           value="{{ request.POST.fine_amount|default:'5000' }}" 
+                                                           step="0.01" 
+                                                           class="form-control fine-amount" 
+                                                           required>
+                                                </td>
+                                                <td>
+                                                    <input type="number" 
+                                                           name="total_amount_{{ st.id }}" 
+                                                           value="" 
+                                                           step="0.01" 
+                                                           class="form-control total-amount" 
+                                                           readonly>
+                                                    <small class="text-muted">Auto-calculated</small>
+                                                </td>
+                                                <td>
+                                                    {% if request.POST.fine_type == "optional" %}
+                                                    <span class="badge badge-warning">Fine optional</span>
+                                                    <small class="d-block text-muted">Fine applied only if late</small>
+                                                    {% else %}
+                                                    <span class="badge badge-danger">Fine mandatory</span>
+                                                    <small class="d-block text-muted">Fine always included</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="8" class="text-center">
+                                                    <div class="alert alert-warning">
+                                                        No students found for the selected criteria.
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    {% if students %}
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="4" class="text-right"><strong>Totals:</strong></td>
+                                            <td id="total-base">0</td>
+                                            <td id="total-fine">0</td>
+                                            <td id="grand-total">0</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                    {% endif %}
+                                </table>
+                                
+                                {% if students %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> 
+                                        <strong>Important Notes:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li><strong>Fee will be displayed in fee list as:</strong> Fee: PKR {{ request.POST.amount|default:"0" }} | Fine: PKR {{ request.POST.fine_amount|default:"5000" }} | Total: PKR {% widthratio request.POST.amount 1 1|add:request.POST.fine_amount|default:5000 %}</li>
+                                            {% if request.POST.fine_type == "optional" %}
+                                            <li><strong>Fine Type: Optional</strong> - Fine of PKR {{ request.POST.fine_amount|default:"5000" }} will be applied ONLY if student pays after due date + {{ request.POST.grace_period_days|default:"7" }} days</li>
+                                            <li>Students who pay on or before due date will NOT be charged the fine</li>
+                                            {% else %}
+                                            <li><strong>Fine Type: Mandatory</strong> - Fine of PKR {{ request.POST.fine_amount|default:"5000" }} is INCLUDED in the total for all students</li>
+                                            <li>All students must pay the fine amount regardless of payment date</li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    <button type="submit" name="submit_all" value="1" class="btn btn-primary">
+                                        <i class="fas fa-upload"></i> Upload Fees
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const disciplineSelect = document.getElementById('disciplineSelect');
+    const batchSelect = document.getElementById('batchSelect');
+    const sectionSelect = document.getElementById('sectionSelect');
+    const fineTypeSelect = document.querySelector('select[name="fine_type"]');
+    const gracePeriodField = document.getElementById('gracePeriodField');
+    const globalBaseAmount = document.getElementById('globalBaseAmount');
+    const globalFineAmount = document.getElementById('globalFineAmount');
+
+    const allBatches = [
+        {% for b in batches %}
+        {id: "{{ b.id }}", name: "{{ b.name }}", disciplineId: "{{ b.discipline.id }}"},
+        {% endfor %}
+    ];
+
+    const allSections = [
+        {% for s in sections %}
+        {id: "{{ s.id }}", name: "{{ s.name }}", batchId: "{{ s.batch.id }}", batchName: "{{ s.batch.name }}"},
+        {% endfor %}
+    ];
+
+    function filterBatches() {
+        const selectedDisciplineId = disciplineSelect.value;
+        batchSelect.innerHTML = '<option value="">Select Batch</option>';
+
+        const filteredBatches = selectedDisciplineId ? allBatches.filter(b => b.disciplineId === selectedDisciplineId) : allBatches;
+        filteredBatches.forEach(b => {
+            const option = document.createElement('option');
+            option.value = b.id;
+            option.textContent = b.name;
+            batchSelect.appendChild(option);
+        });
+
+        filterSections();
+    }
+
+    function filterSections() {
+        const selectedBatchId = batchSelect.value;
+        sectionSelect.innerHTML = '<option value="">Select Section</option>';
+
+        const filteredSections = selectedBatchId ? allSections.filter(s => s.batchId === selectedBatchId) : allSections;
+        filteredSections.forEach(s => {
+            const option = document.createElement('option');
+            option.value = s.id;
+            option.textContent = `${s.name} (${s.batchName})`;
+            sectionSelect.appendChild(option);
+        });
+    }
+
+    function updateGracePeriodVisibility() {
+        if (fineTypeSelect.value === 'optional') {
+            gracePeriodField.style.display = 'block';
+        } else {
+            gracePeriodField.style.display = 'none';
+        }
+    }
+
+    function calculateTotals() {
+        let totalBase = 0;
+        let totalFine = 0;
+        let grandTotal = 0;
+        
+        document.querySelectorAll('tr').forEach(row => {
+            const baseInput = row.querySelector('.base-amount');
+            const fineInput = row.querySelector('.fine-amount');
+            const totalInput = row.querySelector('.total-amount');
+            
+            if (baseInput && fineInput && totalInput) {
+                const baseAmount = parseFloat(baseInput.value) || 0;
+                const fineAmount = parseFloat(fineInput.value) || 0;
+                const totalAmount = baseAmount + fineAmount;
+                
+                totalInput.value = totalAmount.toFixed(2);
+                
+                totalBase += baseAmount;
+                totalFine += fineAmount;
+                grandTotal += totalAmount;
+            }
+        });
+        
+        document.getElementById('total-base').textContent = totalBase.toFixed(2);
+        document.getElementById('total-fine').textContent = totalFine.toFixed(2);
+        document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
+    }
+
+    // Auto-update all base amounts
+    if (globalBaseAmount) {
+        globalBaseAmount.addEventListener('input', function() {
+            const baseValue = this.value;
+            document.querySelectorAll('.base-amount').forEach(input => {
+                input.value = baseValue;
+            });
+            calculateTotals();
+        });
+    }
+
+    // Auto-update all fine amounts
+    if (globalFineAmount) {
+        globalFineAmount.addEventListener('input', function() {
+            const fineValue = this.value || '5000';
+            document.querySelectorAll('.fine-amount').forEach(input => {
+                input.value = fineValue;
+            });
+            calculateTotals();
+        });
+    }
+
+    // Recalculate when individual amounts change
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('base-amount') || e.target.classList.contains('fine-amount')) {
+            calculateTotals();
+        }
+    });
+
+    disciplineSelect.addEventListener('change', filterBatches);
+    batchSelect.addEventListener('change', filterSections);
+    if (fineTypeSelect) {
+        fineTypeSelect.addEventListener('change', updateGracePeriodVisibility);
+    }
+
+    filterBatches();
+    filterSections();
+    updateGracePeriodVisibility();
+
+    const selectedBatch = "{{ request.POST.batch }}";
+    const selectedSection = "{{ request.POST.section }}";
+
+    if (selectedBatch) batchSelect.value = selectedBatch;
+    if (selectedSection) sectionSelect.value = selectedSection;
+    
+    setTimeout(calculateTotals, 100);
+});
+</script>
+
+{% endblock %}

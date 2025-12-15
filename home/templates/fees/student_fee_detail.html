@@ -1,0 +1,282 @@
+{% extends "Home/base.html" %}
+{% load static %}
+{% block body %}
+
+<div class="main-wrapper">
+    <div class="page-wrapper">
+        <div class="content container-fluid">
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="page-title">Student Fee Details</h3>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'fee_list' %}">Fee Management</a></li>
+                            <li class="breadcrumb-item active">Student Details</li>
+                        </ul>
+                    </div>
+                    <div class="col-auto">
+                        <button onclick="window.print()" class="btn btn-primary print-btn">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                        <a href="{% url 'fee_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Information Card -->
+            <div class="row">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card student-info-card shadow-sm" style="border-radius: 15px;">
+                        <div class="card-header bg-gradient-primary text-white" style="border-radius: 15px 15px 0 0;">
+                            <h5 class="mb-0"><i class="fas fa-user-graduate mr-2"></i>Student Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                {% if student.image %}
+                                                        <img class="avatar-img rounded-circle" src="{{ student.image.url }}" alt="{{ student.first_name }}" width="40" height="40">
+                                                    {% else %}
+                                                        <img class="avatar-img rounded-circle" src="{% static 'assets/img/user.jpg' %}" alt="Default" width="40" height="40">
+                                                    {% endif %}
+                                <h4 class="mt-3 mb-1">{{ student.first_name }} {{ student.last_name }}</h4>
+                                <p class="text-muted">{{ student.student_id }}</p>
+                            </div>
+                            
+                            <div class="student-details">
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="fas fa-envelope text-primary mr-2"></i>Email:</span>
+                                    <span class="detail-value">{{ student.email|default:"N/A" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="fas fa-phone text-primary mr-2"></i>Phone:</span>
+                                    <span class="detail-value">{{ student.contact_number|default:"N/A" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="fas fa-building text-primary mr-2"></i>Discipline:</span>
+                                    <span class="detail-value">{{ student.discipline.field|default:"N/A" }} ({{ student.discipline.program|default:"N/A" }})</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="fas fa-users text-primary mr-2"></i>Batch:</span>
+                                    <span class="detail-value">{{ student.batch.name|default:"N/A" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="fas fa-layer-group text-primary mr-2"></i>Section:</span>
+                                    <span class="detail-value">{{ student.section.name|default:"N/A" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fee Summary Card -->
+                <div class="col-lg-8 col-md-6">
+                    <div class="card fee-summary-card shadow-sm" style="border-radius: 15px;">
+                        <div class="card-header bg-gradient-info text-white" style="border-radius: 15px 15px 0 0;">
+                            <h5 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i>Fee Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="summary-item total-fee">
+                                        <div class="summary-icon bg-primary">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </div>
+                                        <div class="summary-content">
+                                            <h6 class="summary-label">Total Fee Payable</h6>
+                                            <h4 class="summary-value text-primary">PKR {{ total_fee_payable|floatformat:2 }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="summary-item total-paid">
+                                        <div class="summary-icon bg-success">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
+                                        <div class="summary-content">
+                                            <h6 class="summary-label">Total Paid</h6>
+                                            <h4 class="summary-value text-success">PKR {{ total_paid|floatformat:2 }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mt-3">
+                                    <div class="summary-item total-fine">
+                                        <div class="summary-icon bg-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </div>
+                                        <div class="summary-content">
+                                            <h6 class="summary-label">Total Fine</h6>
+                                            <h4 class="summary-value text-warning">PKR {{ total_fine|floatformat:2 }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mt-3">
+                                    <div class="summary-item balance-due">
+                                        <div class="summary-icon {% if balance_due > 0 %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            <i class="fas fa-balance-scale"></i>
+                                        </div>
+                                        <div class="summary-content">
+                                            <h6 class="summary-label">Balance Due</h6>
+                                            <h4 class="summary-value {% if balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                PKR {{ balance_due|floatformat:2 }}
+                                            </h4>
+                                            {% if balance_due <= 0 %}
+                                            <span class="badge badge-success">All Fees Cleared</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress mt-4" style="height: 20px; border-radius: 10px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ payment_percentage }}%; border-radius: 10px;" 
+                                     aria-valuenow="{{ payment_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ payment_percentage|floatformat:1 }}%
+                                </div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">Payment Progress</small>
+                            </div>
+                            
+                            <!-- Pending Semesters -->
+                            {% if pending_semesters %}
+                            <div class="mt-4">
+                                <h6><i class="fas fa-exclamation-circle text-danger mr-2"></i>Pending Fee Semesters:</h6>
+                                {% for sem in pending_semesters %}
+                                <span class="badge badge-danger mr-2">Semester {{ sem }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fee Details Table -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card shadow-sm" style="border-radius: 15px;">
+                        <div class="card-header bg-gradient-secondary text-white" style="border-radius: 15px 15px 0 0;">
+                            <h5 class="mb-0"><i class="fas fa-list-alt mr-2"></i>Fee Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped" id="feeDetailsTable">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Semester</th>
+                                            <th>Base Amount</th>
+                                            <th>Fine</th>
+                                            <th>Total Amount</th>
+                                            <th>Paid Amount</th>
+                                            <th>Balance</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Receipt</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fee in fees %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>Semester {{ fee.semester_option }}</td>
+                                            <td class="text-primary font-weight-bold">
+                                                PKR {{ fee.amount|floatformat:2 }}
+                                            </td>
+                                            <td class="text-warning">
+                                                PKR {{ fee.fine|floatformat:2 }}
+                                            </td>
+                                            <td class="font-weight-bold">
+                                                PKR {{ fee.total_fee|floatformat:2 }}
+                                            </td>
+                                            <td class="text-success font-weight-bold">
+                                                PKR {{ fee.paid_amount|floatformat:2 }}
+                                            </td>
+                                            <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %} font-weight-bold">
+                                                PKR {{ fee.balance|floatformat:2 }}
+                                            </td>
+                                            <td>
+                                                <span class="{% if fee.is_overdue %}text-danger{% endif %}">
+                                                    {{ fee.due_date|date:"d M Y" }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if fee.is_cleared %}
+                                                    <span class="badge badge-success">Paid</span>
+                                                {% elif fee.paid_amount > 0 %}
+                                                    <span class="badge badge-warning">Partial</span>
+                                                {% elif fee.is_overdue %}
+                                                    <span class="badge badge-danger">Overdue</span>
+                                                {% else %}
+                                                    <span class="badge badge-secondary">Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if fee.receipt_number %}
+                                                    <span class="badge badge-light">#{{ fee.receipt_number }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="10" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+                                                    <h5>No Fee Records Found</h5>
+                                                    <p class="text-muted">No fee records available for this student.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Add your CSS styles here */
+    .rounded-lg {
+        border-radius: 15px !important;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%) !important;
+    }
+    
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+    }
+    
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('.print-btn').click(function() {
+            window.print();
+        });
+    });
+</script>
+
+{% endblock %}

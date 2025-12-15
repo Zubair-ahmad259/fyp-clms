@@ -1,0 +1,264 @@
+{% extends "Home/base.html" %}
+{% load static %}
+{% load fee_extras %}  <!-- Add this line to load your custom filters -->
+{% block body %}
+
+<div class="main-wrapper">
+    <div class="page-wrapper">
+        <div class="content container-fluid">
+
+            <div class="page-header no-print">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="page-title">Defaulter Students</h3>
+                        <ul class="breadcrumb">
+                            {% comment %} <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li> {% endcomment %}
+                            <li class="breadcrumb-item active">Defaulters</li>
+                        </ul>
+                    </div>
+                    <div class="col-auto">
+                        <button onclick="window.print()" class="btn btn-danger print-btn">
+                            <i class="fas fa-print"></i> Print List
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row no-print">
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="filter-section">
+                                <h5>Filter Defaulters</h5>
+
+                                <form method="get" class="filter-form">
+                                    <div class="row">
+                                       
+                                        <!-- Discipline -->
+                                        <div class="form-group col-sm-6 col-md-3">
+                                            <label for="disciplineSelect">Discipline</label>
+                                            <select class="form-control" name="discipline" id="disciplineSelect">
+                                                <option value="">All Disciplines</option>
+                                                {% for disc in disciplines %}
+                                                <option value="{{ disc.id }}" 
+                                                    {% if selected_discipline == disc.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ disc.field }} ({{ disc.program }})
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-sm-6 col-md-3">
+                                            <label for="batchSelect">Batch</label>
+                                            <select name="batch" class="form-control" id="batchSelect">
+                                                <option value="">All Batches</option>
+                                                {% for batch in batches %}
+                                                    <option value="{{ batch.id }}"
+                                                        {% if selected_batch == batch.id|stringformat:"s" %}selected{% endif %}>
+                                                        {{ batch.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-sm-6 col-md-3">
+                                            <label for="semesterSelect">Semester</label>
+                                            <select name="semester" class="form-control" id="semesterSelect">
+                                                <option value="">All Semesters</option>
+                                                {% for semester in semesters %}
+                                                    <option value="{{ semester.id }}"
+                                                        {% if selected_semester == semester.id|stringformat:"s" %}selected{% endif %}>
+                                                        {{ semester.number }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-sm-6 col-md-3">
+                                            <label for="sectionSelect">Section</label>
+                                            <select name="section" class="form-control" id="sectionSelect">
+                                                <option value="">All Sections</option>
+                                                {% for section in sections %}
+                                                    <option value="{{ section.id }}"
+                                                        {% if selected_section == section.id|stringformat:"s" %}selected{% endif %}>
+                                                        {{ section.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group mt-3">
+                                        <button type="submit" class="btn btn-danger">Apply Filters</button>
+                                        <a href="{% url 'defaulter_student' %}" class="btn btn-secondary">Clear Filters</a>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+
+                            <!-- Summary Information -->
+                            {% if fees %}
+                            <div class="alert alert-info no-print">
+                                <i class="fas fa-info-circle"></i> 
+                                Found <strong>{{ student_list|length }}</strong> defaulters
+                                {% if selected_discipline or selected_batch or selected_semester or selected_section %}
+                                    with applied filters
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped fee-table">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Student ID</th>
+                                            <th>Name</th>
+                                            <th>Batch</th>
+                                            <th>Section</th>
+                                             <th>semester</th>
+                                            <th>Pending Semesters</th>
+                                            <th>Pending Amount</th>
+                                            <th class="no-print">Actions</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {% regroup fees by student as student_list %}
+
+                                        {% for student in student_list %}
+                                            {% with student_fees=student.list %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ student.grouper.student_id }}</td>
+                                                <td>
+                                                    {{ student.grouper.first_name }} {{ student.grouper.last_name }}
+                                                </td>
+                                                <td>{{ student_fees.0.batch.name }}</td>
+                                                <td>{{ student_fees.0.section.name }}</td>
+                                                <td>{{ student_fees.0.semester.number }}</td>
+                                                <td>
+                                                    {% for fee in student_fees %}
+                                                        {% if not fee.is_cleared and not fee.clear_record %}
+                                                            <span class="badge badge-warning">
+                                                                Sem {{ fee.semester_option }}
+                                                                {% if fee.amount > 0 and fee.fine > 0 %}
+                                                                    <small>(Fee + Fine)</small>
+                                                                {% elif fee.amount > 0 %}
+                                                                    <small>(Fee)</small>
+                                                                {% elif fee.fine > 0 %}
+                                                                    <small>(Fine)</small>
+                                                                {% endif %}
+                                                            </span>
+                                                            {% if not forloop.last %} {% endif %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td class="text-danger font-weight-bold">
+                                                    <!-- Display individual fees -->
+                                                    {% for fee in student_fees %}
+                                                        {% if not fee.is_cleared and not fee.clear_record %}
+                                                            {{ fee.total_fee }} <br>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    
+                                                    <!-- Calculate and display total using custom filter -->
+                                                    <div class="mt-1">
+                                                        <small class="text-muted">
+                                                            Total: {{ student_fees|calculate_total }}
+                                                        </small>
+                                                    </div>
+                                                </td>
+                                                <td class="no-print">
+                                                    <a href="{% url 'student_fee_detail' student.grouper.id %}" 
+                                                       class="btn btn-sm btn-info" 
+                                                       title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endwith %}
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="8" class="text-center py-4">
+                                                    <div class="empty-state">
+                                                        <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                                                        <h5>No Defaulters Found</h5>
+                                                        <p class="text-muted">
+                                                            {% if selected_discipline or selected_batch or selected_semester or selected_section %}
+                                                                Try adjusting your filters
+                                                            {% else %}
+                                                                All students are up to date with their fee payments.
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .fee-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        .fee-table th {
+            background-color: #f8f9fa !important;
+            font-weight: bold;
+            border: 1px solid #dee2e6;
+        }
+        
+        .fee-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+        }
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 20px;
+    }
+    
+    .badge {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+
+{% endblock %}

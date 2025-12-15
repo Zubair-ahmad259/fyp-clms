@@ -1,0 +1,76 @@
+{% extends "Home/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+  <div class="content container-fluid">
+    <div class="page-header">
+      <div class="row align-items-center">
+        <div class="col">
+          <h3 class="page-title">Registeration Teachers</h3>
+          <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">Teachers</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="card card-table">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover table-center mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for teacher in teachers %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ teacher.first_name }} {{ teacher.last_name }}</td>
+                <td>{{ teacher.email }}</td>
+                <td>
+                  {% if teacher.user %}
+                    <span class="badge bg-success">Account Created</span>
+                  {% else %}
+                    <span class="badge bg-danger">No Account</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not teacher.user %}
+                    <form method="post" action="">
+                      {% csrf_token %}
+                      <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+                      <button type="submit" class="btn btn-primary btn-sm">Create Account</button>
+                    </form>
+                  {% else %}
+                    <button class="btn btn-secondary btn-sm" disabled>Exists</button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center">No teachers found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

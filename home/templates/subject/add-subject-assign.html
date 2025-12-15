@@ -1,0 +1,112 @@
+{% extends "Home/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Assign Subject</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'subjects:view_subject' %}">Subjects</a></li>
+                        <li class="breadcrumb-item active">Assign Subject</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+            <div>
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" class="card p-3">
+            {% csrf_token %}
+
+                                        <div class="col-md-6">
+                                         <div class="form-group">
+                                          <label>Discipline <span class="text-danger">*</span></label>
+                                           <select class="form-control" id="discipline_filter">
+                                             <option value="">All Disciplines</option>
+                                              {% for discipline in discplines %}
+                                             <option value="{{ discipline.id }}" {% if selected_discipline and selected_discipline.id == discipline.id %}selected{% endif %}>
+                                               {{ discipline.field }} ({{ discipline.program }})
+                                             </option>
+                                               {% endfor %}
+                                             </select>
+                                          <small class="form-text text-muted">Choose the related discipline</small>
+                                        </div>
+                                 </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Teacher</label>
+                        <select name="teachers" class="form-control" required>
+                            <option value="">Select Teacher</option>
+                            {% for t in teachers %}
+                                <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <select name="subject" class="form-control" required>
+                            <option value="">Select Subject</option>
+                            {% for s in subjects %}
+                                <option value="{{ s.id }}">{{ s.name }} ({{ s.desciplain.field }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Batch</label>
+                        <select name="batch" class="form-control" required>
+                            <option value="">Select Batch</option>
+                            {% for b in batches %}
+                                <option value="{{ b.id }}">{{ b.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Semester</label>
+                        <select name="semester" class="form-control" required>
+                            <option value="">Select Semester</option>
+                            {% for s in semesters %}
+                                <option value="{{ s.id }}">{{ s.number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Section</label>
+                        <select name="section" class="form-control" required>
+                            <option value="">Select Section</option>
+                            {% for s in sections %}
+                                <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Assign Subject</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

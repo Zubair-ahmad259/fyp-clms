@@ -1,0 +1,148 @@
+{% extends "Home/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+  <div class="content container-fluid">
+    <div class="page-header">
+      <div class="row align-items-center">
+        <div class="col">
+          <h3 class="page-title">Manage Admins</h3>
+          <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+            <li class="breadcrumb-item active">Admins</li>
+          </ul>
+        </div>
+        <div class="col-auto">
+          {% comment %} <a href="{% url 'create_admin' %}" class="btn btn-primary"> {% endcomment %}
+            <i class="fas fa-plus"></i> Add New Admin
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Filters -->
+    <div class="card">
+      <div class="card-body">
+        <form method="get" class="row">
+          <div class="col-md-4">
+            <label>Discipline</label>
+            <select name="discipline" class="form-control">
+              <option value="">All Disciplines</option>
+              {% for discipline in disciplines %}
+                <option value="{{ discipline.id }}" {% if request.GET.discipline == discipline.id|stringformat:"s" %}selected{% endif %}>
+                  {{ discipline.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label>Role</label>
+            <select name="role" class="form-control">
+              <option value="">All Roles</option>
+              {% for role_value, role_name in role_choices %}
+                <option value="{{ role_value }}" {% if request.GET.role == role_value %}selected{% endif %}>
+                  {{ role_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label>&nbsp;</label>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">Filter</button>
+              {% comment %} <a href="{% url 'manage_admins_view' %}" class="btn btn-secondary">Reset</a> {% endcomment %}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card card-table">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover table-center mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Discipline</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for admin in admins %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ admin.first_name }} {{ admin.last_name }}</td>
+                <td>{{ admin.email }}</td>
+                <td>
+                  <span class="badge bg-info">{{ admin.get_role_display }}</span>
+                </td>
+                <td>
+                  {% if admin.discipline %}
+                    {{ admin.discipline.name }}
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if admin.user %}
+                    <span class="badge bg-success">Account Created</span>
+                  {% else %}
+                    <span class="badge bg-danger">No Account</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="actions">
+                    {% if not admin.user %}
+                      <form method="post" action="" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                        <button type="submit" class="btn btn-primary btn-sm" title="Create User Account">
+                          <i class="fas fa-user-plus"></i>
+                        </button>
+                      </form>
+                    {% else %}
+                      <button class="btn btn-success btn-sm" disabled title="Account Exists">
+                        <i class="fas fa-check"></i>
+                      </button>
+                    {% endif %}
+                    
+                    {% comment %} <a href="{% url 'admin_detail' admin.id %}" class="btn btn-info btn-sm" title="View Details"> {% endcomment %}
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    
+                    {% comment %} <a href="{% url 'edit_admin' admin.id %}" class="btn btn-warning btn-sm" title="Edit"> {% endcomment %}
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    
+                    {% comment %} <a href="{% url 'delete_admin' admin.id %}" class="btn btn-danger btn-sm" title="Delete"> {% endcomment %}
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center">No admin profiles found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

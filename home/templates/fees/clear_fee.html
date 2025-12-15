@@ -1,0 +1,45 @@
+{% extends "Home/base.html" %}
+{% block body %}
+<div class="container mt-4">
+    <h2 class="mb-3">Clear Fee {{ fee.student }}</h2>
+
+    <form method="POST" class="card p-4 shadow-sm">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">Receipt Number</label>
+            <input type="text" name="receipt_number" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Cleared Amount</label>
+            <input type="number" name="cleared_amount" value="{{ fee.total_fee }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <select name="payment_method" class="form-select">
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Online">Online</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Collector Name</label>
+            <select name="collector_name" class="form-select" required>
+                <option value="name1">name1</option>
+                <option value="name2">name2</option>
+                <option value="name3">name3</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Remarks</label>
+            <textarea name="remarks" class="form-control" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Clear Fee</button>
+    </form>
+</div>
+{% endblock %}

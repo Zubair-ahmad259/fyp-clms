@@ -1,0 +1,202 @@
+{% extends "Home/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Add New Subject</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'subjects:view_subject' %}">Subjects</a></li>
+                        <li class="breadcrumb-item active">Add Subject</li>
+                    </ul>
+                </div>
+                <div class="col-auto text-right float-right ml-auto">
+                    <a href="{% url 'subjects:view_subject' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> View All Subjects
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post" action="{% url 'subjects:add_subject' %}" id="subjectForm" novalidate>
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title"><span>Subject Information</span></h5>
+                                </div>
+
+                          
+                                <!-- Subject Name -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Subject Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="name" required
+                                               placeholder="e.g. Introduction to Computer Science">
+                                        <small class="form-text text-muted">Full subject name</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Discipline <span class="text-danger">*</span></label>
+                                             <select class="form-control" id="discipline_filter" name="discipline" required>
+                                             <option value="">All Disciplines</option>
+                                              {% for discipline in disciplines %}
+                                             <option value="{{ discipline.id }}" {% if selected_discipline and selected_discipline.id == discipline.id %}selected{% endif %}>
+                                               {{ discipline.field }} ({{ discipline.program }})
+                                             </option>
+                                               {% endfor %}
+                                             </select>
+                                        <small class="form-text text-muted">Choose the related discipline</small>
+                                    </div>
+                                </div>
+
+
+                                <!-- Left Column -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Subject Code <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="code" required
+                                               placeholder="e.g. CS101" pattern="[A-Za-z]{2,5}\d{3}"
+                                               title="Subject code should be 2-5 letters followed by 3 numbers">
+                                        <small class="form-text text-muted">Unique course code</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right Column -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Semester <span class="text-danger">*</span></label>
+                                        <select class="form-control" name="semester" required>
+                                            <option value="">Select Semester</option>
+                                            {% for value, name in semester_choices %}
+                                            <option value="{{ value }}">{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Credit Hours</label>
+                                        <input type="number" class="form-control" name="credit_hours" 
+                                               min="1" max="10" value="3">
+                                        <small class="form-text text-muted">Typically 1-10 credits</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Subject Type</label>
+                                        <select class="form-control" name="subject_type">
+                                            {% for value, name in subject_type_choices %}
+                                            <option value="{{ value }}" {% if value == 'core' %}selected{% endif %}>{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Full Width Fields -->
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <textarea class="form-control" name="description" rows="3"
+                                                  placeholder="Optional subject description"></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="is_active" id="is_active" checked>
+                                            <label class="form-check-label" for="is_active">Active</label>
+                                        </div>
+                                        <small class="form-text text-muted">Uncheck to deactivate this subject</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                    <button type="reset" class="btn btn-secondary ml-2">Reset</button>
+                                    <a href="{% url 'subjects:view_subject' %}" class="btn btn-link">Cancel</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('subjectForm');
+    const codeInput = form.querySelector('[name="code"]');
+    
+    codeInput.addEventListener('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        const requiredFields = form.querySelectorAll('[required]');
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+                
+                if (!field.nextElementSibling.classList.contains('invalid-feedback')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = 'This field is required';
+                    field.parentNode.insertBefore(errorDiv, field.nextSibling);
+                }
+            } else {
+                field.classList.remove('is-invalid');
+                const feedback = field.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.remove();
+                }
+            }
+        });
+        
+        const codePattern = /^[A-Za-z]{2,5}\d{3}$/;
+        if (!codePattern.test(codeInput.value)) {
+            isValid = false;
+            codeInput.classList.add('is-invalid');
+            if (!codeInput.nextElementSibling.classList.contains('invalid-feedback')) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                errorDiv.textContent = 'Format: 2-5 letters followed by 3 numbers (e.g. CS101)';
+                codeInput.parentNode.insertBefore(errorDiv, codeInput.nextSibling);
+            }
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+    
+    form.addEventListener('input', function(e) {
+        if (e.target.hasAttribute('required') && e.target.value.trim()) {
+            e.target.classList.remove('is-invalid');
+            const feedback = e.target.nextElementSibling;
+            if (feedback && feedback.classList.contains('invalid-feedback')) {
+                feedback.remove();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
