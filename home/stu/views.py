@@ -25,6 +25,11 @@ def add_student(request):
                matric_marks=request.POST.get('matric_marks'),
                fsc_marks=request.POST.get('fsc_marks'),
 
+
+
+
+
+
             )
             student.save()
             return redirect('add_student')
