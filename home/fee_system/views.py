@@ -600,6 +600,7 @@ from django.db.models import Sum
 import json
 
 
+
 # Helper function to check permissions
 def can_edit_fee(user):
     """Check if user has permission to edit fees"""
@@ -830,37 +831,89 @@ def fee_list(request):
         "user_can_edit": user_can_edit,
         "user_can_delete": user_can_delete,
     })
-
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import Sum
+from django.utils import timezone
+from decimal import Decimal
 
 def clear_fee(request, fee_id):
     fee = get_object_or_404(UploadFee, id=fee_id)
     
-    if ClearFee.objects.filter(upload_fee=fee).exists():
-        messages.info(request, "Fee already cleared.")
+    # Calculate total fee manually
+    total_fee_value = Decimal('0')
+    
+    if hasattr(fee, 'amount'):
+        total_fee_value = fee.amount
+    
+    # Add fine amount if exists
+    if hasattr(fee, 'fine_amount'):
+        total_fee_value += fee.fine_amount
+    
+    # Calculate total already paid
+    total_paid = ClearFee.objects.filter(upload_fee=fee).aggregate(
+        total=Sum('cleared_amount')
+    )['total'] or Decimal('0')
+    
+    # Calculate remaining amount
+    remaining_amount = total_fee_value - total_paid
+    
+    # If fee is already fully paid
+    if remaining_amount <= 0:
+        messages.info(request, f"Fee is already fully paid. Total paid: PKR {total_paid:.2f}")
+        # Redirect to fee list instead
         return redirect("fee_list")
 
     if request.method == "POST":
         receipt_number = request.POST.get("receipt_number")
-        cleared_amount = request.POST.get("cleared_amount")
+        cleared_amount = Decimal(request.POST.get("cleared_amount", 0))
         payment_method = request.POST.get("payment_method")
         collector_name = request.POST.get("collector_name")
         remarks = request.POST.get("remarks")
-
-        ClearFee.objects.create(
-            upload_fee=fee,
-            receipt_number=receipt_number,
-            cleared_amount=cleared_amount,
-            payment_method=payment_method,
-            collector_name=collector_name,
-            remarks=remarks
-        )
-
-        messages.success(request, "Fee cleared.")
-        return redirect("fee_list")
-
-    return render(request, "fees/clear_fee.html", {"fee": fee})
-
-
+        
+        # Validate
+        if cleared_amount <= Decimal('0'):
+            messages.error(request, "Payment amount must be greater than 0.")
+        elif cleared_amount > remaining_amount:
+            messages.error(request, f"Payment amount cannot exceed remaining amount: PKR {remaining_amount:.2f}")
+        else:
+            # Create payment record
+            ClearFee.objects.create(
+                upload_fee=fee,
+                receipt_number=receipt_number,
+                cleared_amount=cleared_amount,
+                payment_method=payment_method,
+                collector_name=collector_name,
+                remarks=remarks
+            )
+            
+            # Calculate new totals
+            new_total_paid = total_paid + cleared_amount
+            new_remaining = remaining_amount - cleared_amount
+            
+            # Update fee status
+            if new_total_paid >= total_fee_value:
+                fee.status = 'paid'
+                messages.success(request, f"✅ Fee fully cleared! Total paid: PKR {new_total_paid:.2f}")
+            else:
+                fee.status = 'partial'
+                messages.success(request, f"✅ Partial payment of PKR {cleared_amount:.2f} received. Remaining: PKR {new_remaining:.2f}")
+            
+            fee.save()
+            
+            # FIX: Redirect to fee_list instead of student_fees
+            return redirect("fee_list")
+    
+    # Get payment history
+    payment_history = ClearFee.objects.filter(upload_fee=fee).order_by('-id')
+    
+    return render(request, "fees/clear_fee.html", {
+        "fee": fee,
+        "total_fee": total_fee_value,
+        "total_paid": total_paid,
+        "remaining_amount": remaining_amount,
+        "payment_history": payment_history
+    })
 def defaulter_student(request):
     batches = Batch.objects.all()
     semesters = Semester.objects.all()
