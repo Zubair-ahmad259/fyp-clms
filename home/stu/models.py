@@ -40,7 +40,6 @@
 #         return f"{self.father_name}"
     
 
-
 # # Create your models here.
 # class Student(models.Model):
 #     first_name=models.CharField(max_length=20)

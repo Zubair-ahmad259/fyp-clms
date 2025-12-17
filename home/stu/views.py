@@ -24,6 +24,8 @@ def add_student(request):
                student_phone  =request.POST.get('student_phone'),
                matric_marks=request.POST.get('matric_marks'),
                fsc_marks=request.POST.get('fsc_marks'),
+                fsc_marks=request.POST.get('fsc_marks'),
+
 
 
 
