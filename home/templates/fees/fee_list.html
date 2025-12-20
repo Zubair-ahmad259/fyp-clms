@@ -1,9 +1,8 @@
 {% extends "Home/base.html" %}
 {% load static %}
-{% load fee_extras %}  <!-- Add this line to load your custom filters -->
+{% load humanize %}
 
 {% block body %}
-
 <div class="main-wrapper">
     <div class="page-wrapper">
         <div class="content container-fluid">
@@ -12,9 +11,8 @@
             <div class="page-header">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h3 class="page-title">Fee Management</h3>
+                        <h3 class="page-title">Student Fee Management</h3>
                         <ul class="breadcrumb">
-                            {% comment %} <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li> {% endcomment %}
                             <li class="breadcrumb-item active">Fee Records</li>
                         </ul>
                     </div>
@@ -23,1154 +21,344 @@
                             <i class="fas fa-cloud-upload-alt"></i> Upload Fee
                         </a>
                         <a href="{% url 'defaulter_student' %}" class="btn btn-danger">
-                            <i class="fas fa-exclamation-circle"></i> View Defaulters
+                            <i class="fas fa-exclamation-circle"></i> Defaulters
                         </a>
                     </div>
                 </div>
             </div>
 
             <!-- Statistics Cards -->
-            <div class="row">
-                <div class="col-xl-3 col-sm-6 col-12">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1">
-                                    <h5 class="mb-0">Total Students</h5>
-                                    <h3 class="mt-2 mb-0">{{ student_fees|length }}</h3>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-users fa-2x opacity-50"></i>
-                                </div>
+            <div class="row mb-4">
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card card-body bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Total Students</h6>
+                                <h3 class="mb-0">{{ student_fees|length }}</h3>
                             </div>
+                            <i class="fas fa-users fa-2x opacity-50"></i>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-sm-6 col-12">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1">
-                                    <h5 class="mb-0">Total Cleared</h3>
-                                    <h3 class="mt-2 mb-0">
-                                        {% with total_cleared=0 %}
-                                            {% for student_data in student_fees %}
-                                                {% for fee in student_data.fees %}
-                                                    {% if fee.is_cleared %}
-                                                        {% widthratio student_data.total_cleared 1 1 as cleared_amount %}
-                                                        {{ cleared_amount|add:total_cleared }}
-                                                    {% endif %}
-                                                {% endfor %}
-                                            {% endfor %}
-                                        {% endwith %}
-                                    </h3>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
-                                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card card-body bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Cleared Amount</h6>
+                                <h3 class="mb-0">PKR {{ total_cleared_all|floatformat:0|intcomma }}</h3>
                             </div>
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-sm-6 col-12">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1">
-                                    <h5 class="mb-0">Total Pending</h3>
-                                    <h3 class="mt-2 mb-0">
-                                        {% with total_pending=0 %}
-                                            {% for student_data in student_fees %}
-                                                {{ student_data.total_pending|add:total_pending }}
-                                            {% endfor %}
-                                        {% endwith %}
-                                    </h3>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-clock fa-2x opacity-50"></i>
-                                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card card-body bg-warning text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Pending Amount</h6>
+                                <h3 class="mb-0">PKR {{ total_pending_all|floatformat:0|intcomma }}</h3>
                             </div>
+                            <i class="fas fa-clock fa-2x opacity-50"></i>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-sm-6 col-12">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1">
-                                    <h5 class="mb-0">Total Amount</h5>
-                                    <h3 class="mt-2 mb-0">
-                                        {% with total_all=0 %}
-                                            {% for student_data in student_fees %}
-                                                ₹{{ student_data.total_all|add:total_all }}
-                                            {% endfor %}
-                                        {% endwith %}
-                                    </h3>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
-                                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card card-body bg-info text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Total Fee</h6>
+                                <h3 class="mb-0">PKR {{ total_fee_all|floatformat:0|intcomma }}</h3>
                             </div>
+                            <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Filter Card -->
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="card card-table">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-filter"></i> Filter Fee Records
-                            </h5>
+            <!-- Filter Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Students</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Discipline</label>
+                            <select name="discipline" class="form-select form-select-sm">
+                                <option value="">All Disciplines</option>
+                                {% for disc in disciplines %}
+                                <option value="{{ disc.id }}" {% if selected_discipline == disc.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ disc.field }} ({{ disc.program }})
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <div class="card-body">
-                            <form method="get" class="filter-form" id="filterForm">
-                                <div class="row">
-                                    <!-- Discipline -->
-                                    <div class="form-group col-sm-6 col-md-3">
-                                        <label for="disciplineSelect" class="form-label">Discipline</label>
-                                        <select class="form-control form-control-sm" name="discipline" id="disciplineSelect">
-                                            <option value="">All Disciplines</option>
-                                            {% for disc in disciplines %}
-                                            <option value="{{ disc.id }}" 
-                                                {% if selected_discipline == disc.id|stringformat:"s" %}selected{% endif %}>
-                                                {{ disc.field }} ({{ disc.program }})
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <!-- Batch -->
-                                    <div class="form-group col-sm-6 col-md-3">
-                                        <label for="batchSelect" class="form-label">Batch</label>
-                                        <select class="form-control form-control-sm" name="batch" id="batchSelect">
-                                            <option value="">All Batches</option>
-                                            {% for b in batches %}
-                                            <option value="{{ b.id }}" data-discipline="{{ b.discipline.id }}" 
-                                                {% if selected_batch == b.id|stringformat:"s" %}selected{% endif %}>
-                                                {{ b.name }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <!-- Section -->
-                                    <div class="form-group col-sm-6 col-md-3">
-                                        <label for="sectionSelect" class="form-label">Section</label>
-                                        <select class="form-control form-control-sm" name="section" id="sectionSelect">
-                                            <option value="">All Sections</option>
-                                            {% for s in sections %}
-                                            <option value="{{ s.id }}" data-batch="{{ s.batch.id }}" 
-                                                {% if selected_section == s.id|stringformat:"s" %}selected{% endif %}>
-                                                {{ s.name }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <!-- Semester -->
-                                    <div class="form-group col-sm-6 col-md-3">
-                                        <label for="semesterSelect" class="form-label">Semester</label>
-                                        <select class="form-control form-control-sm" name="semester" id="semesterSelect">
-                                            <option value="">All Semesters</option>
-                                            {% for sem in semesters %}
-                                            <option value="{{ sem.id }}" 
-                                                {% if selected_semester == sem.id|stringformat:"s" %}selected{% endif %}>
-                                                Semester {{ sem.number }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row mt-3">
-                                    <div class="col-12">
-                                        <button type="submit" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-search"></i> Apply Filters
-                                        </button>
-                                        <a href="{% url 'fee_list' %}" class="btn btn-secondary btn-sm">
-                                            <i class="fas fa-times"></i> Clear Filters
-                                        </a>
-                                        <button type="button" id="exportBtn" class="btn btn-success btn-sm float-end">
-                                            <i class="fas fa-download"></i> Export to Excel
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
+                        <div class="col-md-3">
+                            <label class="form-label">Batch</label>
+                            <select name="batch" class="form-select form-select-sm">
+                                <option value="">All Batches</option>
+                                {% for b in batches %}
+                                <option value="{{ b.id }}" {% if selected_batch == b.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ b.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Semester</label>
+                            <select name="semester" class="form-select form-select-sm">
+                                <option value="">All Semesters</option>
+                                {% for sem in semesters %}
+                                <option value="{{ sem.id }}" {% if selected_semester == sem.id|stringformat:"s" %}selected{% endif %}>
+                                    Semester {{ sem.number }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Section</label>
+                            <select name="section" class="form-select form-select-sm">
+                                <option value="">All Sections</option>
+                                {% for s in sections %}
+                                <option value="{{ s.id }}" {% if selected_section == s.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ s.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                            <a href="{% url 'fee_list' %}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            <!-- Active Filters Alert -->
-            {% if selected_batch or selected_semester or selected_section or selected_discipline %}
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <i class="fas fa-filter"></i> <strong>Active Filters:</strong>
-                {% if selected_discipline %} <span class="badge bg-primary">{{ selected_discipline_name }}</span> {% endif %}
-                {% if selected_batch %} <span class="badge bg-secondary">{{ selected_batch_name }}</span> {% endif %}
-                {% if selected_semester %} <span class="badge bg-info">{{ selected_semester_name }}</span> {% endif %}
-                {% if selected_section %} <span class="badge bg-dark">{{ selected_section_name }}</span> {% endif %}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endif %}
-
-            <!-- Messages Alert -->
+            <!-- Messages -->
             {% if messages %}
-            <div class="alert-container">
+            <div class="mb-4">
                 {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    <i class="fas 
-                        {% if message.tags == 'success' %}fa-check-circle{% endif %}
-                        {% if message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle{% endif %}
-                        {% if message.tags == 'warning' %}fa-exclamation-triangle{% endif %}
-                        {% if message.tags == 'info' %}fa-info-circle{% endif %}
-                    "></i>
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
                 {% endfor %}
             </div>
             {% endif %}
 
-            <!-- Bulk Actions Bar -->
-            <div class="card mb-3" id="bulkActionsBar" style="display: none;">
-                <div class="card-body py-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="fw-bold"><span id="selectedCount">0</span> fee(s) selected</span>
-                        </div>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="bulkEditBtn">
-                                <i class="fas fa-edit"></i> Edit Selected
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" id="bulkDeleteBtn">
-                                <i class="fas fa-trash"></i> Delete Selected
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelectionBtn">
-                                <i class="fas fa-times"></i> Clear
-                            </button>
-                        </div>
-                    </div>
+            <!-- Students Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Student Fee Records</h5>
                 </div>
-            </div>
-
-            <!-- Main Table Card -->
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="card card-table">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-list"></i> Fee Records
-                                <span class="badge bg-primary ms-2">{{ student_fees|length }}</span>
-                            </h5>
-                            <div class="card-action">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-cog"></i> Options
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#" id="selectAllRows"><i class="fas fa-check-square"></i> Select All</a></li>
-                                        <li><a class="dropdown-item" href="#" id="deselectAllRows"><i class="fas fa-square"></i> Deselect All</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="#" id="printSelected"><i class="fas fa-print"></i> Print Selected</a></li>
-                                        <li><a class="dropdown-item" href="#" id="sendReminders"><i class="fas fa-envelope"></i> Send Reminders</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-center mb-0" id="feeTable">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th class="text-center" style="width: 40px;">
-                                                <input type="checkbox" id="selectAllCheckbox">
-                                            </th>
-                                            <th>#</th>
-                                            <th>Student ID</th>
-                                            <th>Student Name</th>
-                                            <th>Batch</th>
-                                            <th>Section</th>
-                                            <th>Semester</th>
-                                            <th>Fee Details</th>
-                                            <th>Status</th>
-                                            <th class="text-end">Pending Amount</th>
-                                            <th class="text-center">Actions</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {% for student_data in student_fees %}
-                                        <tr class="{% if student_data.total_pending > 0 %}table-warning{% else %}table-success{% endif %} student-row" data-student-id="{{ student_data.student.id }}">
-                                            <td class="text-center">
-                                                <input type="checkbox" class="student-checkbox" value="{{ student_data.student.id }}">
-                                            </td>
-                                            <td>{{ forloop.counter }}</td>
-                                            <td>
-                                                <span class="fw-bold">{{ student_data.student.student_id }}</span>
-                                            </td>
-                                            <td>
-                                                <h6 class="mb-0">
-                                                    {{ student_data.student.first_name }} {{ student_data.student.last_name }}
-                                                </h6>
-                                                <small class="text-muted">{{ student_data.student.email|default:"No email" }}</small>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ student_data.batch.name }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-dark">{{ student_data.section.name }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-info">Sem {{ student_data.semester.number }}</span>
-                                            </td>
-                                            
-                                            <td style="min-width: 320px;">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student</th>
+                                    <th>Academic Info</th>
+                                    <th>Fee Summary</th>
+                                    <th>Payment Status</th>
+                                    <th>Balance</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student_data in student_fees %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if student_data.student.image %}
+                                            <img src="{{ student_data.student.image.url }}" class="rounded-circle me-3" width="45" height="45">
+                                            {% else %}
+                                            <div class="avatar bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                                {{ student_data.student.first_name|first|upper }}{{ student_data.student.last_name|first|upper }}
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-1">{{ student_data.student.first_name }} {{ student_data.student.last_name }}</h6>
+                                                <p class="mb-0 text-muted small">ID: {{ student_data.student.student_id }}</p>
+                                                <p class="mb-0 text-muted small">{{ student_data.student.email|default:"No email" }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted small">
+                                            <div><strong>Discipline:</strong> {{ student_data.discipline.field }}</div>
+                                            <div><strong>Batch:</strong> {{ student_data.batch.name }}</div>
+                                            <div><strong>Section:</strong> {{ student_data.section.name }}</div>
+                                            <div><strong>Semester:</strong> {{ student_data.semester.number }}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="small">
+                                            <div><strong>Total Fee:</strong> PKR {{ student_data.total_all|floatformat:0|intcomma }}</div>
+                                            <div><strong>Paid:</strong> PKR {{ student_data.total_cleared|floatformat:0|intcomma }}</div>
+                                            <div><strong>Semesters:</strong> 
                                                 {% for fee in student_data.fees %}
-                                                <div class="fee-detail-item mb-2 p-2 border-start border-3 
-                                                    {% if fee.is_cleared %}border-success{% else %}border-danger{% endif %} 
-                                                    {% if forloop.last %}mb-0{% endif %}"
-                                                    data-fee-id="{{ fee.id }}"
-                                                    data-student-name="{{ student_data.student.first_name }} {{ student_data.student.last_name }}">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <span class="fw-bold">Sem {{ fee.semester_option }}</span>
-                                                            <div class="text-muted small">
-                                                                <span>Fee: <i class="fas fa-rupee-sign"></i>{{ fee.amount }}</span> | 
-                                                                <span>Fine: <i class="fas fa-rupee-sign"></i>{{ fee.fine }}</span> | 
-                                                                <span>Total: <i class="fas fa-rupee-sign"></i>{{ fee.total_fee }}</span>
-                                                            </div>
-                                                            <div class="mt-1">
-                                                                <small class="text-muted">
-                                                                    <i class="fas fa-calendar-alt"></i> Due: {{ fee.due_date|date:"d M, Y" }}
-                                                                    {% if fee.is_cleared and fee.clear_record %}
-                                                                    | <i class="fas fa-calendar-check"></i> Paid: {{ fee.clear_record.cleared_date|date:"d M, Y" }}
-                                                                    {% endif %}
-                                                                </small>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            {% if fee.is_cleared %}
-                                                            <span class="badge bg-success">Cleared</span>
-                                                            {% else %}
-                                                            <span class="badge bg-danger">Pending</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <!-- Fee Action Buttons -->
-                                                    <div class="fee-actions mt-2 d-flex justify-content-end gap-2">
-                                                        {% if not fee.is_cleared %}
-                                                        <a href="{% url 'clear_fees' fee.id %}" 
-                                                           class="btn btn-sm btn-success btn-rounded"
-                                                           title="Clear Fee"
-                                                           data-bs-toggle="tooltip">
-                                                            <i class="fas fa-check"></i> Clear
-                                                        </a>
-                                                        {% endif %}
-                                                        
-                                                        <a href="{% url 'edit_fee' fee.id %}" 
-                                                           class="btn btn-sm btn-warning btn-rounded"
-                                                           title="Edit Fee"
-                                                           data-bs-toggle="tooltip">
-                                                            <i class="fas fa-edit"></i> Edit
-                                                        </a>
-                                                        
-                                                        {% if not fee.is_cleared %}
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-danger btn-rounded delete-fee-btn"
-                                                                title="Delete Fee"
-                                                                data-fee-id="{{ fee.id }}"
-                                                                data-student-name="{{ student_data.student.first_name }} {{ student_data.student.last_name }}"
-                                                                data-amount="{{ fee.amount }}"
-                                                                data-semester="{{ fee.semester_option }}"
-                                                                data-bs-toggle="tooltip">
-                                                            <i class="fas fa-trash"></i> Delete
-                                                        </button>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                                {% empty %}
-                                                <span class="text-muted"><i class="fas fa-ban"></i> No fee records</span>
+                                                <span class="badge bg-light text-dark">Sem {{ fee.semester_option }}</span>
                                                 {% endfor %}
-                                            </td>
-                                            
-                                            <td>
-                                                <div class="d-flex flex-column gap-1">
-                                                    {% for fee in student_data.fees %}
-                                                    <div>
-                                                        {% if fee.is_cleared %}
-                                                        <span class="badge bg-success-light text-success p-2 rounded-pill">
-                                                            <i class="fas fa-check-circle"></i> Cleared
-                                                        </span>
-                                                        {% else %}
-                                                        <span class="badge bg-danger-light text-danger p-2 rounded-pill">
-                                                            <i class="fas fa-clock"></i> Pending
-                                                        </span>
-                                                        {% endif %}
-                                                    </div>
-                                                    {% endfor %}
-                                                </div>
-                                            </td>
-                                            
-                                            <td class="text-end fw-bold {% if student_data.total_pending > 0 %}text-danger{% else %}text-success{% endif %}">
-                                                <i class="fas fa-rupee-sign"></i>{{ student_data.total_pending }}
-                                                {% if student_data.total_pending > 0 %}
-                                                <div class="progress mt-1" style="height: 5px;">
-                                                    {% with max_fee=student_data.total_all %}
-                                                    {% widthratio student_data.total_pending max_fee 100 as percentage %}
-                                                    <div class="progress-bar bg-danger" role="progressbar" 
-                                                         style="width: {% if percentage > 100 %}100{% else %}{{ percentage }}{% endif %}%" 
-                                                         aria-valuenow="{% if percentage > 100 %}100{% else %}{{ percentage }}{% endif %}" 
-                                                         aria-valuemin="0" 
-                                                         aria-valuemax="100"></div>
-                                                    {% endwith %}
-                                                </div>
+                                            </div>
+                                            <div><strong>Fees Due:</strong> {{ student_data.fees|length }} semester(s)</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if student_data.total_pending == 0 %}
+                                        <span class="badge bg-success p-2">
+                                            <i class="fas fa-check-circle"></i> Fully Paid
+                                        </span>
+                                        {% elif student_data.total_cleared > 0 %}
+                                        <span class="badge bg-warning p-2">
+                                            <i class="fas fa-clock"></i> Partial
+                                        </span>
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            {% widthratio student_data.total_cleared student_data.total_all 100 as percentage %}
+                                            <div class="progress-bar bg-warning" style="width: {{ percentage }}%"></div>
+                                        </div>
+                                        <small class="text-muted">{{ percentage|floatformat:0 }}% Paid</small>
+                                        {% else %}
+                                        <span class="badge bg-danger p-2">
+                                            <i class="fas fa-exclamation-circle"></i> Unpaid
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if student_data.total_pending > 0 %}
+                                        <h5 class="text-danger mb-0">PKR {{ student_data.total_pending|floatformat:0|intcomma }}</h5>
+                                        <small class="text-muted">Balance Due</small>
+                                        {% else %}
+                                        <h5 class="text-success mb-0">PKR 0</h5>
+                                        <small class="text-muted">Cleared</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="{% url 'student_fee_detail' student_data.student.id %}" 
+                                               class="btn btn-sm btn-info"
+                                               title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            {% if student_data.total_pending > 0 %}
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-primary dropdown-toggle"
+                                                    data-bs-toggle="dropdown"
+                                                    title="Make Payment">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                {% for fee in student_data.fees %}
+                                                {% if fee.remaining_amount > 0 %}
+                                                <a class="dropdown-item" href="{% url 'clear_fees' fee.id %}">
+                                                    <i class="fas fa-credit-card"></i> Pay Sem {{ fee.semester_option }}
+                                                    <span class="badge bg-danger float-end">PKR {{ fee.remaining_amount|floatformat:0|intcomma }}</span>
+                                                </a>
                                                 {% endif %}
-                                            </td>
-                                            
-                                            <td class="text-center">
-                                                <div class="btn-group">
-                                                    <a href="{% url 'student_fee_detail' student_data.student.id %}" 
-                                                       class="btn btn-sm btn-info btn-rounded"
-                                                       title="View Details"
-                                                       data-bs-toggle="tooltip">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-primary btn-rounded send-reminder-btn"
-                                                            title="Send Reminder"
-                                                            data-student-id="{{ student_data.student.id }}"
-                                                            data-student-name="{{ student_data.student.first_name }} {{ student_data.student.last_name }}"
-                                                            data-amount="{{ student_data.total_pending }}"
-                                                            data-bs-toggle="tooltip">
-                                                        <i class="fas fa-envelope"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="11" class="text-center py-5">
-                                                <div class="empty-state">
-                                                    <i class="fas fa-search fa-3x text-muted mb-4"></i>
-                                                    <h4>No Fee Records Found</h4>
-                                                    <p class="text-muted mb-4">
-                                                        {% if selected_discipline or selected_batch or selected_semester or selected_section %}
-                                                        Try adjusting your filters or upload new fee records
-                                                        {% else %}
-                                                        No fee records available. Click the "Upload Fee" button to add records.
-                                                        {% endif %}
-                                                    </p>
-                                                    <a href="{% url 'upload_fee' %}" class="btn btn-primary">
-                                                        <i class="fas fa-cloud-upload-alt"></i> Upload Fee Records
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                            {% if user_can_edit %}
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-warning dropdown-toggle"
+                                                    data-bs-toggle="dropdown"
+                                                    title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                {% for fee in student_data.fees %}
+                                                <a class="dropdown-item" href="{% url 'edit_fee' fee.id %}">
+                                                    <i class="fas fa-pencil-alt"></i> Edit Sem {{ fee.semester_option }}
+                                                </a>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="fas fa-search fa-3x mb-3"></i>
+                                            <h5>No Students Found</h5>
+                                            <p>Try adjusting your filters or upload new fee records</p>
+                                            <a href="{% url 'upload_fee' %}" class="btn btn-primary">
+                                                <i class="fas fa-cloud-upload-alt"></i> Upload Fee Records
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteFeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Fee Deletion
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger">
-                    <h6><i class="fas fa-exclamation-circle me-2"></i>Warning!</h6>
-                    <p class="mb-2">You are about to delete the following fee record:</p>
-                    <div class="card bg-light border-danger">
-                        <div class="card-body">
-                            <p><strong>Student:</strong> <span id="deleteStudentName"></span></p>
-                            <p><strong>Amount:</strong> Rs. <span id="deleteAmount"></span></p>
-                            <p><strong>Semester:</strong> <span id="deleteSemester"></span></p>
-                            <p class="text-danger mb-0"><small>This action cannot be undone.</small></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-check mt-3">
-                    <input class="form-check-input" type="checkbox" id="confirmDelete">
-                    <label class="form-check-label" for="confirmDelete">
-                        I understand that this action is irreversible
-                    </label>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Cancel
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
-                    <i class="fas fa-trash me-1"></i> Delete Fee
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bulk Delete Modal -->
-<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Delete Multiple Fees
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger">
-                    <h6><i class="fas fa-exclamation-circle me-2"></i>Warning!</h6>
-                    <p class="mb-0">You are about to delete <span id="bulkDeleteCount" class="fw-bold">0</span> fee record(s). This action cannot be undone.</p>
-                </div>
-                <div class="form-check mt-3">
-                    <input class="form-check-input" type="checkbox" id="confirmBulkDelete">
-                    <label class="form-check-label" for="confirmBulkDelete">
-                        I understand that this action is irreversible
-                    </label>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Cancel
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmBulkDeleteBtn" disabled>
-                    <i class="fas fa-trash me-1"></i> Delete Selected
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reminder Modal -->
-<div class="modal fade" id="reminderModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-envelope me-2"></i>Send Reminder
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle me-2"></i>Reminder Details</h6>
-                    <p class="mb-2">Send fee reminder to:</p>
-                    <div class="card bg-light border-info">
-                        <div class="card-body">
-                            <p><strong>Student:</strong> <span id="reminderStudentName"></span></p>
-                            <p><strong>Pending Amount:</strong> Rs. <span id="reminderAmount"></span></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label for="reminderMessage" class="form-label">Message</label>
-                    <textarea class="form-control" id="reminderMessage" rows="4" placeholder="Custom reminder message...">
-Dear student,
-
-This is a reminder that you have a pending fee of Rs. {amount} for the current semester.
-
-Please clear your dues at the earliest to avoid any inconvenience.
-
-Thank you.
-College Administration
-                    </textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Cancel
-                </button>
-                <button type="button" class="btn btn-info" id="sendReminderBtn">
-                    <i class="fas fa-paper-plane me-1"></i> Send Reminder
-                </button>
-            </div>
         </div>
     </div>
 </div>
 
 <style>
-    /* Custom Styling */
-    .card-table {
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-    
-    .card-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-bottom: none;
-        padding: 15px 20px;
-    }
-    
-    .card-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .table th {
-        background-color: #f8f9fa;
-        color: #495057;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 12px;
-        letter-spacing: 0.5px;
-        border-top: 1px solid #e0e0e0;
-    }
-    
-    .table tbody tr {
-        transition: all 0.3s ease;
-    }
-    
-    .table tbody tr:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        background-color: #f8f9fa !important;
-    }
-    
-    .table-success {
-        background-color: rgba(40, 167, 69, 0.05) !important;
-    }
-    
-    .table-warning {
-        background-color: rgba(255, 193, 7, 0.05) !important;
-    }
-    
-    .fee-detail-item {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        padding: 10px;
-        margin-bottom: 8px;
-    }
-    
-    .fee-detail-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .fee-actions {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .fee-detail-item:hover .fee-actions {
-        opacity: 1;
-    }
-    
-    .badge {
-        padding: 6px 12px;
-        font-weight: 500;
-    }
-    
-    .badge.bg-success-light {
-        background-color: rgba(40, 167, 69, 0.1) !important;
-        border: 1px solid rgba(40, 167, 69, 0.2);
-    }
-    
-    .badge.bg-danger-light {
-        background-color: rgba(220, 53, 69, 0.1) !important;
-        border: 1px solid rgba(220, 53, 69, 0.2);
-    }
-    
-    .btn-rounded {
-        border-radius: 20px !important;
-        padding: 4px 12px;
-        font-size: 12px;
-    }
-    
-    .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        align-items: center;
-    }
-    
-    .empty-state {
-        padding: 40px 20px;
-    }
-    
-    .empty-state i {
-        opacity: 0.3;
-    }
-    
-    .progress {
-        border-radius: 10px;
-    }
-    
-    .progress-bar {
-        border-radius: 10px;
-    }
-    
-    .form-control-sm {
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-    }
-    
-    .form-control-sm:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    }
-    
-    .border-start {
-        border-left: 3px solid !important;
-    }
-    
-    .rounded-pill {
-        border-radius: 50px !important;
-    }
-    
-    .card-action {
-        display: flex;
-        align-items: center;
-    }
-    
-    #bulkActionsBar {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 1px solid #dee2e6;
-        animation: slideDown 0.3s ease;
-    }
-    
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .card-header {
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .card-title {
-            justify-content: center;
-            text-align: center;
-        }
-        
-        .card-action {
-            justify-content: center;
-        }
-        
-        .table-responsive {
-            border: none;
-        }
-        
-        .fee-actions {
-            opacity: 1;
-            flex-wrap: wrap;
-        }
-        
-        .btn-rounded {
-            font-size: 11px;
-            padding: 3px 8px;
-        }
-        
-        .fee-detail-item {
-            padding: 8px;
-        }
-    }
+.avatar {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.badge {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.dropdown-menu {
+    min-width: 200px;
+}
+
+.dropdown-item {
+    padding: 8px 15px;
+}
+
+.btn-group .btn {
+    border-radius: 5px !important;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Filter functionality
-    const disciplineSelect = document.getElementById('disciplineSelect');
-    const batchSelect = document.getElementById('batchSelect');
-    const sectionSelect = document.getElementById('sectionSelect');
-
-    const allBatches = [
-        {% for batch in batches %}
-        {
-            id: "{{ batch.id }}",
-            name: "{{ batch.name }}",
-            disciplineId: "{{ batch.discipline.id }}"
-        },
-        {% endfor %}
-    ];
-
-    const allSections = [
-        {% for section in sections %}
-        {
-            id: "{{ section.id }}",
-            name: "{{ section.name }}",
-            batchId: "{{ section.batch.id }}"
-        },
-        {% endfor %}
-    ];
-
-    function filterBatches() {
-        const selectedDisciplineId = disciplineSelect.value;
-        batchSelect.innerHTML = '<option value="">All Batches</option>';
-
-        if (selectedDisciplineId) {
-            const filteredBatches = allBatches.filter(batch => batch.disciplineId === selectedDisciplineId);
-            filteredBatches.forEach(batch => {
-                const option = document.createElement('option');
-                option.value = batch.id;
-                option.textContent = batch.name;
-                batchSelect.appendChild(option);
-            });
-        } else {
-            allBatches.forEach(batch => {
-                const option = document.createElement('option');
-                option.value = batch.id;
-                option.textContent = batch.name;
-                batchSelect.appendChild(option);
-            });
-        }
-
-        batchSelect.value = "";
-        filterSections();
-    }
-
-    function filterSections() {
-        const selectedBatchId = batchSelect.value;
-        sectionSelect.innerHTML = '<option value="">All Sections</option>';
-
-        if (selectedBatchId) {
-            const filteredSections = allSections.filter(section => section.batchId === selectedBatchId);
-            filteredSections.forEach(section => {
-                const option = document.createElement('option');
-                option.value = section.id;
-                option.textContent = section.name;
-                sectionSelect.appendChild(option);
-            });
-        } else {
-            allSections.forEach(section => {
-                const option = document.createElement('option');
-                option.value = section.id;
-                option.textContent = section.name;
-                sectionSelect.appendChild(option);
-            });
-        }
-
-        const currentSectionId = "{{ selected_section }}";
-        if (currentSectionId && sectionSelect.querySelector('option[value="' + currentSectionId + '"]')) {
-            sectionSelect.value = currentSectionId;
-        }
-    }
-
-    disciplineSelect.addEventListener('change', filterBatches);
-    batchSelect.addEventListener('change', filterSections);
-
-    // Initialize filters
-    filterBatches();
-    filterSections();
-
-    // Selection functionality
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
-    const bulkActionsBar = document.getElementById('bulkActionsBar');
-    const selectedCountSpan = document.getElementById('selectedCount');
-    
-    let selectedFees = new Set();
-    let selectedStudents = new Set();
-
-    function updateBulkActionsBar() {
-        const selectedCount = selectedStudents.size;
-        if (selectedCount > 0) {
-            bulkActionsBar.style.display = 'block';
-            selectedCountSpan.textContent = selectedCount;
-        } else {
-            bulkActionsBar.style.display = 'none';
-        }
-    }
-
-    function updateSelectAllCheckbox() {
-        const allChecked = Array.from(studentCheckboxes).every(cb => cb.checked);
-        const someChecked = Array.from(studentCheckboxes).some(cb => cb.checked);
-        selectAllCheckbox.checked = allChecked;
-        selectAllCheckbox.indeterminate = someChecked && !allChecked;
-    }
-
-    selectAllCheckbox.addEventListener('change', function() {
-        studentCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
-            if (this.checked) {
-                selectedStudents.add(checkbox.value);
-            } else {
-                selectedStudents.delete(checkbox.value);
-            }
-        });
-        updateBulkActionsBar();
-    });
-
-    studentCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            if (this.checked) {
-                selectedStudents.add(this.value);
-            } else {
-                selectedStudents.delete(this.value);
-            }
-            updateSelectAllCheckbox();
-            updateBulkActionsBar();
-        });
-    });
-
-    // Dropdown actions
-    document.getElementById('selectAllRows').addEventListener('click', function(e) {
-        e.preventDefault();
-        studentCheckboxes.forEach(checkbox => {
-            checkbox.checked = true;
-            selectedStudents.add(checkbox.value);
-        });
-        updateSelectAllCheckbox();
-        updateBulkActionsBar();
-    });
-
-    document.getElementById('deselectAllRows').addEventListener('click', function(e) {
-        e.preventDefault();
-        studentCheckboxes.forEach(checkbox => {
-            checkbox.checked = false;
-            selectedStudents.delete(checkbox.value);
-        });
-        updateSelectAllCheckbox();
-        updateBulkActionsBar();
-    });
-
-    document.getElementById('clearSelectionBtn').addEventListener('click', function() {
-        studentCheckboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        selectedStudents.clear();
-        updateSelectAllCheckbox();
-        updateBulkActionsBar();
-    });
-
-    // Delete fee functionality
-    const deleteFeeModal = new bootstrap.Modal(document.getElementById('deleteFeeModal'));
-    let feeToDelete = null;
-
-    document.querySelectorAll('.delete-fee-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            feeToDelete = this.dataset.feeId;
-            document.getElementById('deleteStudentName').textContent = this.dataset.studentName;
-            document.getElementById('deleteAmount').textContent = this.dataset.amount;
-            document.getElementById('deleteSemester').textContent = this.dataset.semester;
-            document.getElementById('confirmDelete').checked = false;
-            document.getElementById('confirmDeleteBtn').disabled = true;
-            deleteFeeModal.show();
-        });
-    });
-
-    document.getElementById('confirmDelete').addEventListener('change', function() {
-        document.getElementById('confirmDeleteBtn').disabled = !this.checked;
-    });
-
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        if (feeToDelete) {
-            // Create a form and submit it
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/fees/delete/${feeToDelete}/`;
-            form.style.display = 'none';
-            
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = 'csrfmiddlewaretoken';
-            csrfToken.value = getCookie('csrftoken');
-            form.appendChild(csrfToken);
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
-
-    // Bulk delete functionality
-    const bulkDeleteModal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
-    
-    document.getElementById('bulkDeleteBtn').addEventListener('click', function() {
-        const selectedCount = selectedStudents.size;
-        if (selectedCount === 0) {
-            alert('Please select at least one student.');
-            return;
-        }
-        
-        document.getElementById('bulkDeleteCount').textContent = selectedCount;
-        document.getElementById('confirmBulkDelete').checked = false;
-        document.getElementById('confirmBulkDeleteBtn').disabled = true;
-        bulkDeleteModal.show();
-    });
-
-    document.getElementById('confirmBulkDelete').addEventListener('change', function() {
-        document.getElementById('confirmBulkDeleteBtn').disabled = !this.checked;
-    });
-
-    document.getElementById('confirmBulkDeleteBtn').addEventListener('click', function() {
-        // Here you would implement bulk delete logic
-        // For now, we'll just show an alert
-        bulkDeleteModal.hide();
-        alert(`Bulk delete functionality for ${selectedStudents.size} students would be implemented here.`);
-        
-        // Clear selection after operation
-        document.getElementById('clearSelectionBtn').click();
-    });
-
-    // Reminder functionality
-    const reminderModal = new bootstrap.Modal(document.getElementById('reminderModal'));
-    let reminderStudent = null;
-    let reminderAmount = null;
-
-    document.querySelectorAll('.send-reminder-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            reminderStudent = this.dataset.studentName;
-            reminderAmount = this.dataset.amount;
-            
-            document.getElementById('reminderStudentName').textContent = reminderStudent;
-            document.getElementById('reminderAmount').textContent = reminderAmount;
-            
-            const messageTextarea = document.getElementById('reminderMessage');
-            messageTextarea.value = messageTextarea.value.replace('{amount}', reminderAmount);
-            
-            reminderModal.show();
-        });
-    });
-
-    document.getElementById('sendReminderBtn').addEventListener('click', function() {
-        const message = document.getElementById('reminderMessage').value;
-        
-        // Here you would implement the reminder sending logic
-        // For now, we'll just show an alert
-        reminderModal.hide();
-        alert(`Reminder sent to ${reminderStudent} for Rs. ${reminderAmount}\n\nMessage:\n${message}`);
-    });
-
-    // Export functionality
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        // Build URL with current filters
-        let exportUrl = window.location.href;
-        if (exportUrl.includes('?')) {
-            exportUrl += '&export=excel';
-        } else {
-            exportUrl += '?export=excel';
-        }
-        
-        // Open in new tab for export
-        window.open(exportUrl, '_blank');
-    });
-
-    // Print selected functionality
-    document.getElementById('printSelected').addEventListener('click', function(e) {
-        e.preventDefault();
-        if (selectedStudents.size === 0) {
-            alert('Please select at least one student to print.');
-            return;
-        }
-        
-        // Here you would typically make an AJAX call to generate a printable report
-        alert(`Print functionality for ${selectedStudents.size} selected students would be implemented here.`);
-    });
-
-    // Send reminders functionality
-    document.getElementById('sendReminders').addEventListener('click', function(e) {
-        e.preventDefault();
-        if (selectedStudents.size === 0) {
-            alert('Please select at least one student to send reminders.');
-            return;
-        }
-        
-        if (confirm(`Send fee reminders to ${selectedStudents.size} selected students?`)) {
-            // Here you would typically make an AJAX call to send reminders
-            alert(`Reminder functionality would send emails/SMS to ${selectedStudents.size} students.`);
-            
-            // Clear selection after operation
-            document.getElementById('clearSelectionBtn').click();
-        }
-    });
-
-    // Clear fee confirmation
-    const clearButtons = document.querySelectorAll('a[href*="clear_fee"]');
-    clearButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('Are you sure you want to mark this fee as cleared?')) {
-                e.preventDefault();
-            }
-        });
-    });
-
-    // Edit fee confirmation for pending fees
-    const editButtons = document.querySelectorAll('a[href*="edit_fee"]');
-    editButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            const feeItem = this.closest('.fee-detail-item');
-            const isCleared = feeItem.querySelector('.badge').textContent === 'Cleared';
-            
-            if (isCleared) {
-                if (!confirm('This fee has already been cleared. Editing it might affect clearance records. Continue?')) {
-                    e.preventDefault();
-                }
-            }
-        });
-    });
-
-    // Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    // Quick view for fee details on hover
-    document.querySelectorAll('.fee-detail-item').forEach(item => {
-        item.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateX(5px) scale(1.02)';
-        });
-        
-        item.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateX(0) scale(1)';
-        });
-    });
-
-    // Auto-hide messages after 5 seconds
-    setTimeout(() => {
-        document.querySelectorAll('.alert').forEach(alert => {
-            const bsAlert = new bootstrap.Alert(alert);
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            var bsAlert = new bootstrap.Alert(alert);
             bsAlert.close();
         });
     }, 5000);
 });
 </script>
-
 {% endblock %}
