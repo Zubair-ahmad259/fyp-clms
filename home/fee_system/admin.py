@@ -6,6 +6,9 @@ from .models import UploadFee
 from django.contrib import admin
 from .models import UploadFee
 
+
+
+
 @admin.register(UploadFee)
 class UploadFeeAdmin(admin.ModelAdmin):
     # Show these fields in list
