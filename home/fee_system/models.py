@@ -3,61 +3,66 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from student.models import Batch, Semester, Section, Student, Discipline
 from decimal import Decimal
 
-class UploadFee(models.Model):
-    SEMESTER_CHOICES = [(i, f"Semester {i}") for i in range(1, 9)]
 
+class UploadFee(models.Model):
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE)
-    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)  # Current semester only
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE)
-    due_date = models.DateField(null=True, blank=True)
-
-    semester_option = models.IntegerField(
-        choices=SEMESTER_CHOICES,
-        validators=[MinValueValidator(1), MaxValueValidator(8)],
-        help_text="Select the semester this fee applies to"
-    )
+    due_date = models.DateField()
+    
+    # Fee fields
     amount = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
-        default=0.00
+        default=0.00,
+        verbose_name="Tuition Fee"
     )
     fine = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0.00,
-        help_text="Enter any fine amount (default is 5000)"
+        verbose_name="Late Fine"
     )
     upload_date = models.DateField(auto_now_add=True)
     
-    # Add payment status field
+    # Payment status
     is_fully_paid = models.BooleanField(default=False)
     paid_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=Decimal('0.00'),
-        help_text="Total amount paid so far"
+        verbose_name="Amount Paid"
     )
     remaining_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=Decimal('0.00'),
-        help_text="Remaining amount to be paid"
+        verbose_name="Balance Due"
     )
-
+    
+    # Status tracking
+    is_overdue = models.BooleanField(default=False)
+    grace_period = models.PositiveIntegerField(default=5, help_text="Grace period in days")
+    
     class Meta:
-        ordering = ['batch', 'semester', 'section', 'student']
-        unique_together = ('student', 'semester_option')
+        ordering = ['-due_date']
+        unique_together = ('student', 'semester')
+        verbose_name = "Student Fee"
+        verbose_name_plural = "Student Fees"
 
     def save(self, *args, **kwargs):
-        """Calculate remaining amount automatically"""
-        # Ensure paid_amount is Decimal
+        """Calculate remaining amount and check overdue status"""
+        from django.utils import timezone
+        
+        # Ensure Decimal values
         if not isinstance(self.paid_amount, Decimal):
-            try:
-                self.paid_amount = Decimal(str(self.paid_amount))
-            except:
-                self.paid_amount = Decimal('0.00')
+            self.paid_amount = Decimal(str(self.paid_amount))
+        if not isinstance(self.amount, Decimal):
+            self.amount = Decimal(str(self.amount))
+        if not isinstance(self.fine, Decimal):
+            self.fine = Decimal(str(self.fine))
         
         # Calculate remaining amount
         self.remaining_amount = self.total_fee() - self.paid_amount
@@ -65,19 +70,43 @@ class UploadFee(models.Model):
         # Check if fully paid
         self.is_fully_paid = self.remaining_amount <= Decimal('0.00')
         
+        # Check if overdue
+        today = timezone.now().date()
+        if self.due_date and not self.is_fully_paid:
+            self.is_overdue = today > self.due_date
+        else:
+            self.is_overdue = False
+        
         super().save(*args, **kwargs)
 
     def total_fee(self):
         """Return fee + fine"""
-        # Ensure both are Decimal
-        amount = self.amount if isinstance(self.amount, Decimal) else Decimal(str(self.amount))
-        fine = self.fine if isinstance(self.fine, Decimal) else Decimal(str(self.fine))
-        return amount + fine
+        return self.amount + self.fine
+
+    def get_status_display(self):
+        """Get human-readable status"""
+        if self.is_fully_paid:
+            return "Paid"
+        elif self.is_overdue:
+            return "Overdue"
+        elif self.due_date:
+            return "Pending"
+        return "Unknown"
+
+    def get_status_color(self):
+        """Get Bootstrap color class for status"""
+        if self.is_fully_paid:
+            return "success"
+        elif self.is_overdue:
+            return "danger"
+        elif self.due_date:
+            return "warning"
+        return "secondary"
+    
 
     def __str__(self):
-        return f"Fee for {self.student} - Sem {self.semester_option} - Total: {self.total_fee()}"
-
-
+        return f"{self.student.first_name} - {self.semester.number} - {self.total_fee()}"
+    
 class ClearFee(models.Model):
     PAYMENT_METHODS = [
         ('Cash', 'Cash'),
