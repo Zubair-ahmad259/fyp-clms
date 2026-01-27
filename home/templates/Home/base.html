@@ -144,17 +144,20 @@
                         <a href="#"><i class="fas fa-book-reader"></i> <span> Subjects</span> <span class="menu-arrow"></span></a>
                         <ul>
 
-                           <li><a href="{% url "subjects:view_subject" %}">Subject List</a></li>
-                           <li><a href="{% url "subjects:add_subject" %}">Subject Add</a></li>
-                           <li><a href="{% url "subjects:add_subject_assign" %}">Add subject assign</a></li>
-                           <li><a href="{% url "subjects:show_subject_assign" %}">Subject Add</a></li>
-
-                        </ul>
+                           <li><a href="{% url "subject:view_subject" %}">Subject List</a></li>
+                           <li><a href="{% url "subject:add_subject" %}">Subject Add</a></li>
+                           <li><a href="{% url "subject:add_subject_assign" %}">Add subject assign</a></li>
+                           <li><a href="{% url "subject:show_subject_assign" %}">Subject Add</a></li>
+                           
+                                                </ul>
                      </li>
 
                          
                      <li>
+                      
                         <a href="#"><i class="fas fa-book-reader"></i> <span> exam system</span> <span class="menu-arrow"></span>
+                                                      <li><a href="{% url 'dashboard' %}">exam dashboard </a></li>
+
                             <ul>
 
 
@@ -171,6 +174,11 @@
                         <ul>
                            <li><a href="{% url 'case_list' %}">cases List</a></li>
                            <li><a href="{% url 'add_case' %}">Add case</a></li>
+                           {% comment %} <li><a href="{% url 'create_exam' %}">A </a></li> {% endcomment %}
+                           {% comment %} <li><a href="{% url 'dashboard' %}">exam dashboard </a></li> {% endcomment %}
+
+
+
                         </ul>
                      </li>                  
                      

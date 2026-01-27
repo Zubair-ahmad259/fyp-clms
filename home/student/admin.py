@@ -1,56 +1,92 @@
 from django.contrib import admin
-from .models import Batch, Semester, Section, Parent, Student,Discipline
+from .models import Parent, Student
+from Academic.models import Discipline, Batch, Semester, Section
 
-@admin.register(Batch)
-class BatchAdmin(admin.ModelAdmin):
-    list_display = ('name', 'start_year', 'end_year','discipline')
-    search_fields = ('name',)
-    list_filter = ('start_year', 'end_year')
-
-@admin.register(Semester)
-class SemesterAdmin(admin.ModelAdmin):
-    list_display = ('number', 'description')
-    search_fields = ('number', 'description')  # Added search_fields
-    ordering = ('number',)
-
-@admin.register(Section)
-class SectionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'batch', 'description')
-    search_fields = ('name', 'batch__name')
-    list_filter = ('batch',)
+# Inline for Parent (optional - if you want to show parent in student admin)
+class ParentInline(admin.StackedInline):
+    model = Parent
+    extra = 0
+    can_delete = False
 
 @admin.register(Parent)
 class ParentAdmin(admin.ModelAdmin):
-    list_display = ('father_name', 'mother_name', 'father_contact')
-    search_fields = ('father_name', 'mother_name', 'father_contact')
+    list_display = ('father_name', 'mother_name', 'father_email', 'father_contact')
+    search_fields = ('father_name', 'mother_name', 'father_email')
+    list_filter = ('father_name',)
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('student_id', 'first_name', 'last_name','discipline',
-'batch', 'semester', 'section')
-    search_fields = ('student_id', 'first_name', 'last_name')
-    list_filter = ('batch', 'semester', 'section', 'gender','discipline')
-    autocomplete_fields = ['batch', 'semester', 'section','discipline']  # Requires search_fields in related admins
-    
+    list_display = (
+        'student_id', 
+        'first_name', 
+        'last_name', 
+        'email', 
+        'batch', 
+        'semester', 
+        'section', 
+        'discipline',
+        'gender'
+    )
+    list_filter = (
+        'gender', 
+        'batch', 
+        'semester', 
+        'section', 
+        'discipline',
+        'batch__discipline__program'
+    )
+    search_fields = (
+        'student_id', 
+        'first_name', 
+        'last_name', 
+        'email', 
+        'admission_number',
+        'contact_number'
+    )
+    autocomplete_fields = ['batch', 'semester', 'section', 'discipline', 'user', 'parent']
+    readonly_fields = ('student_id', 'admission_number')
     fieldsets = (
         ('Basic Information', {
-            'fields': ('first_name', 'last_name', 'student_id', 'admission_number', 'gender', 'dob', 'image')
-        }),
-        ('Contact Information', {
-            'fields': ('email', 'contact_number', 'address')
+            'fields': (
+                'user',
+                'student_id', 
+                'admission_number',
+                'first_name', 
+                'last_name',
+                'gender',
+                'dob',
+                'email',
+                'contact_number',
+                'image'
+            )
         }),
         ('Academic Information', {
-            'fields': ('batch', 'semester', 'section','discipline')
+            'fields': (
+                'discipline',
+                'batch',
+                'semester',
+                'section',
+            )
         }),
-        ('Parent Information', {
-            'fields': ('parent',)
+        ('Parent & Address Information', {
+            'fields': (
+                'parent',
+                'address',
+            ),
+            'classes': ('collapse',)
         }),
     )
-
-
-@admin.register(Discipline)
-class DisciplineAdmin(admin.ModelAdmin):
-    list_display = ('program', 'field')
-    list_filter = ('program', 'field')
-    search_fields = ('program', 'field')
-    ordering = ('program', 'field')
+    
+    # If you want to show parent inline in student admin (optional)
+    # inlines = [ParentInline]
+    
+    def get_queryset(self, request):
+        # Optimize database queries
+        return super().get_queryset(request).select_related(
+            'batch', 
+            'semester', 
+            'section', 
+            'discipline',
+            'parent',
+            'user'
+        )

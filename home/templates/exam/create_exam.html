@@ -1,0 +1,536 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block title %}Create Exam - Student Management System{% endblock %}
+
+{% block body %}
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    .required:after {
+        content: " *";
+        color: red;
+    }
+    .exam-type-option {
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 5px;
+        cursor: pointer;
+    }
+    .exam-type-option:hover {
+        background-color: #f8f9fa;
+    }
+    .exam-type-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .weightage-badge {
+        font-size: 0.8rem;
+        margin-left: 5px;
+    }
+    .marks-info {
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3 class="page-title">Create New Exam</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Exams</a></li>
+                        <li class="breadcrumb-item active">Create Exam</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Exam Details</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if error %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> {{ error }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'create_exam' %}" id="examForm">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <!-- Subject Configuration -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="required">Subject Configuration</label>
+                                        <select class="form-control" name="subject_mark_component" id="subjectConfig" required>
+                                            <option value="">Select Subject Configuration</option>
+                                            {% for component in subject_mark_components %}
+                                            <option value="{{ component.id }}" 
+                                                    data-credits="{{ component.credit_hours }}"
+                                                    data-percentages="{{ component.mid_term_percentage }},{{ component.final_term_percentage }},{{ component.quiz_percentage }},{{ component.assignment_percentage }},{{ component.presentation_percentage }},{{ component.lab_percentage }},{{ component.viva_percentage }},{{ component.attendance_percentage }}">
+                                                {{ component.subject.code }} - {{ component.semester }} - {{ component.batch }}
+                                                {% if component.section %}
+                                                ({{ component.section }})
+                                                {% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">
+                                            Select subject, semester, and batch
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Exam Type -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="required">Exam Type</label>
+                                        <select class="form-control" name="exam_type" id="examType" required disabled>
+                                            <option value="">Select Subject Configuration First</option>
+                                        </select>
+                                        <div id="typeInfo" class="mt-2" style="display: none;">
+                                            <small class="form-text text-muted">
+                                                Available exam types for this configuration
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weightage Information -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div id="weightageInfo" class="alert alert-info" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <strong>Subject:</strong> 
+                                                <span id="subjectName">-</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Credit Hours:</strong> 
+                                                <span id="creditHours">-</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Semester:</strong> 
+                                                <span id="semesterInfo">-</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Batch:</strong> 
+                                                <span id="batchInfo">-</span>
+                                            </div>
+                                        </div>
+                                        <hr class="my-2">
+                                        <div id="percentageDistribution" class="mt-2">
+                                            <!-- Will be filled by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Exam Date -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="required">Exam Date</label>
+                                        <input type="date" class="form-control" name="exam_date" 
+                                               value="{{ today|date:'Y-m-d' }}" required>
+                                    </div>
+                                </div>
+
+                                <!-- Total Marks -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="required">Total Marks</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="total_marks" 
+                                                   step="1" min="0" value="60" id="totalMarks" required>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">Marks</span>
+                                            </div>
+                                        </div>
+                                        <div class="marks-info">
+                                            <small>
+                                                <i class="fas fa-info-circle"></i>
+                                                Enter the maximum marks for this exam (e.g., 60 marks for Mid-Term)
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Passing Marks -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Passing Marks</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="passing_marks" 
+                                                   step="1" min="0" value="24" id="passingMarks">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">Marks</span>
+                                            </div>
+                                        </div>
+                                        <div class="marks-info">
+                                            <small>
+                                                <i class="fas fa-info-circle"></i>
+                                                Default is 40% of total marks (24 marks for 60 total)
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Weightage Percentage -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Weightage Percentage</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="weightage_percentage" 
+                                                   step="0.01" min="0" max="100" value="100.00" id="weightageInput" readonly>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+                                        <div class="marks-info">
+                                            <small>
+                                                <i class="fas fa-info-circle"></i>
+                                                This is automatically set to 100%. All exam marks count toward the subject total.
+                                                <span id="maxWeightageInfo" class="text-success"></span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Subject Contribution Info -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div id="contributionInfo" class="alert alert-success" style="display: none;">
+                                        <h6><i class="fas fa-calculator"></i> Subject Contribution Calculation:</h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <strong>Exam Marks:</strong> 
+                                                <span id="examMarksDisplay">60</span> marks
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Weightage:</strong> 
+                                                <span id="weightageDisplay">100</span>%
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Contribution to Subject:</strong> 
+                                                <span id="subjectContribution">60</span> marks
+                                            </div>
+                                        </div>
+                                        <small class="text-muted mt-2 d-block">
+                                            <i class="fas fa-lightbulb"></i> 
+                                            This exam contributes <span id="percentageContribution">60</span>% toward the subject's total marks.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Publish Option -->
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="is_published" name="is_published">
+                                    <label class="custom-control-label" for="is_published">
+                                        Publish Exam Immediately
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Published exams can have results entered
+                                </small>
+                            </div>
+
+                            <div class="text-right">
+                                <a href="{% url 'exam_list' %}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Create Exam
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Instructions Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Instructions</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success mr-2"></i>
+                                First select subject configuration
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success mr-2"></i>
+                                Only available exam types will be shown
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success mr-2"></i>
+                                Enter actual marks for the exam (e.g., 60)
+                            </li>
+                        </ul>
+                        
+                        <hr>
+                        
+                        <h6>Available Exam Types:</h6>
+                        <ul class="list-unstyled small" id="availableTypesList">
+                            <li>Select a subject configuration to see available exam types</li>
+                        </ul>
+                        
+                        <hr>
+                        
+                        <h6>Example:</h6>
+                        <ul class="list-unstyled small">
+                            <li><strong>Mid-Term Exam:</strong></li>
+                            <li>Total Marks: 60</li>
+                            <li>Weightage: 100%</li>
+                            <li>Contribution: 60 marks (20% of subject)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        // Set minimum date to today
+        var today = new Date().toISOString().split('T')[0];
+        $('input[name="exam_date"]').attr('min', today);
+        
+        // Initialize variables
+        var currentWeightages = {};
+        var currentExamPercentage = 0;
+        
+        // When subject configuration changes
+        $('#subjectConfig').change(function() {
+            var componentId = $(this).val();
+            var $examTypeSelect = $('#examType');
+            
+            if (!componentId) {
+                // Reset everything
+                $examTypeSelect.html('<option value="">Select Subject Configuration First</option>')
+                    .prop('disabled', true);
+                $('#weightageInfo').hide();
+                $('#typeInfo').hide();
+                $('#contributionInfo').hide();
+                $('#availableTypesList').html('<li>Select a subject configuration to see available exam types</li>');
+                return;
+            }
+            
+            // Get available exam types via AJAX
+            $.get('{% url "get_available_exam_types" %}', {component_id: componentId}, function(data) {
+                // Clear and enable exam type select
+                $examTypeSelect.empty().prop('disabled', false);
+                
+                if (data.available_types.length === 0) {
+                    $examTypeSelect.append('<option value="">No available exam types</option>');
+                    return;
+                }
+                
+                // Add available exam types
+                $examTypeSelect.append('<option value="">Select Exam Type</option>');
+                $.each(data.available_types, function(index, type) {
+                    $examTypeSelect.append('<option value="' + type[0] + '">' + type[1] + '</option>');
+                });
+                
+                // Show type info
+                $('#typeInfo').show();
+                
+                // Update weightage info
+                $('#subjectName').text(data.component_details.subject);
+                $('#creditHours').text(data.component_details.credit_hours + ' CH');
+                $('#semesterInfo').text(data.component_details.semester);
+                $('#batchInfo').text(data.component_details.batch);
+                
+                // Get percentages from selected option
+                var selectedOption = $('#subjectConfig option:selected');
+                var percentages = selectedOption.data('percentages').split(',');
+                
+                // Store weightages
+                currentWeightages = {
+                    'mid_term': parseFloat(percentages[0]) || 0,
+                    'final': parseFloat(percentages[1]) || 0,
+                    'quiz': parseFloat(percentages[2]) || 0,
+                    'assignment': parseFloat(percentages[3]) || 0,
+                    'presentation': parseFloat(percentages[4]) || 0,
+                    'lab': parseFloat(percentages[5]) || 0,
+                    'viva': parseFloat(percentages[6]) || 0,
+                    'attendance': parseFloat(percentages[7]) || 0
+                };
+                
+                // Update percentage distribution display
+                updatePercentageDisplay();
+                
+                // Show weightage info
+                $('#weightageInfo').show();
+                
+                // Update available types list in sidebar
+                updateAvailableTypesList(data.available_types);
+                
+                // Reset exam type selection
+                $examTypeSelect.val('');
+                $('#maxWeightageInfo').text('');
+                $('#contributionInfo').hide();
+                
+            }).fail(function() {
+                alert('Error loading available exam types');
+            });
+        });
+        
+        // When exam type changes
+        $('#examType').change(function() {
+            var examType = $(this).val();
+            if (!examType) {
+                $('#maxWeightageInfo').text('');
+                $('#contributionInfo').hide();
+                return;
+            }
+            
+            // Get max weightage for selected exam type
+            var maxWeightage = currentWeightages[examType] || 0;
+            currentExamPercentage = maxWeightage;
+            
+            // Show info
+            $('#maxWeightageInfo').html(' <i class="fas fa-check-circle"></i> This exam contributes ' + maxWeightage.toFixed(0) + '% to subject total');
+            
+            // Show contribution info
+            $('#contributionInfo').show();
+            
+            // Calculate and update contribution
+            updateContribution();
+        });
+        
+        // Calculate passing marks (40% of total marks)
+        function calculatePassingMarks() {
+            var totalMarks = parseFloat($('#totalMarks').val()) || 60;
+            var passingMarks = Math.round(totalMarks * 0.4);
+            $('#passingMarks').val(passingMarks);
+        }
+        
+        // Update contribution calculation
+        function updateContribution() {
+            var totalMarks = parseFloat($('#totalMarks').val()) || 60;
+            var weightage = 100; // Always 100% for individual exams
+            
+            // Calculate subject contribution
+            var subjectContribution = totalMarks; // Since weightage is 100%
+            
+            // Update displays
+            $('#examMarksDisplay').text(totalMarks);
+            $('#weightageDisplay').text(weightage);
+            $('#subjectContribution').text(subjectContribution);
+            
+            // Calculate percentage contribution to subject
+            if (currentExamPercentage > 0) {
+                var percentageContribution = currentExamPercentage;
+                $('#percentageContribution').text(percentageContribution.toFixed(0));
+            }
+        }
+        
+        // Auto-calculate when total marks changes
+        $('#totalMarks').on('input', function() {
+            calculatePassingMarks();
+            updateContribution();
+        });
+        
+        // Initial calculations
+        calculatePassingMarks();
+        
+        // Form validation
+        $('#examForm').submit(function(e) {
+            var componentId = $('#subjectConfig').val();
+            var examType = $('#examType').val();
+            var totalMarks = $('#totalMarks').val();
+            
+            if (!componentId || !examType || !totalMarks) {
+                e.preventDefault();
+                alert('Please fill all required fields');
+                return false;
+            }
+            
+            // Validate total marks is reasonable
+            if (totalMarks < 10 || totalMarks > 200) {
+                if (!confirm('Total marks of ' + totalMarks + ' seems unusual. Continue anyway?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        function updatePercentageDisplay() {
+            var html = '<div class="row">';
+            var types = [
+                {key: 'mid_term', name: 'Mid Term', color: 'primary'},
+                {key: 'final', name: 'Final', color: 'danger'},
+                {key: 'quiz', name: 'Quiz', color: 'info'},
+                {key: 'assignment', name: 'Assignment', color: 'success'},
+                {key: 'presentation', name: 'Presentation', color: 'warning'},
+                {key: 'lab', name: 'Lab', color: 'dark'},
+                {key: 'viva', name: 'Viva', color: 'secondary'},
+                {key: 'attendance', name: 'Attendance', color: 'light'}
+            ];
+            
+            types.forEach(function(type) {
+                var percentage = currentWeightages[type.key] || 0;
+                if (percentage > 0) {
+                    html += '<div class="col-6 col-md-3 mb-2">' +
+                           '<span class="badge badge-' + type.color + '">' + type.name + '</span><br>' +
+                           '<strong>' + percentage.toFixed(2) + '%</strong>' +
+                           '</div>';
+                }
+            });
+            
+            html += '</div>';
+            $('#percentageDistribution').html(html);
+        }
+        
+        function updateAvailableTypesList(availableTypes) {
+            var html = '';
+            if (availableTypes.length === 0) {
+                html = '<li class="text-danger">No exam types available</li>';
+            } else {
+                $.each(availableTypes, function(index, type) {
+                    var percentage = currentWeightages[type[0]] || 0;
+                    html += '<li>' +
+                           '<span class="badge badge-primary">' + type[1] + '</span>' +
+                           ' <span class="text-muted">(' + percentage.toFixed(2) + '%)</span>' +
+                           '</li>';
+                });
+            }
+            $('#availableTypesList').html(html);
+        }
+        
+        // Initialize with example
+        $('#totalMarks').trigger('input');
+    });
+</script>
+{% endblock %}

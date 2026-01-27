@@ -13,7 +13,7 @@
                     </ul>
                 </div>
                 <div class="col-auto text-right float-right ml-auto">
-                    <a href="{% url 'subjects:add_subject' %}" class="btn btn-primary">
+                    <a href="{% url 'subject:add_subject' %}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Add Subject
                     </a>
                 </div>
@@ -25,7 +25,7 @@
             <div class="col-sm-12">
                 <div class="card">
                     <div class="card-body">
-                        <form method="get" action="{% url 'subjects:view_subject' %}">
+                        <form method="get" action="{% url 'subject:view_subject' %}">
                             <div class="row">
                               <!-- In the filter card section -->
 <div class="col-md-4">
@@ -88,7 +88,7 @@
                                     <button type="submit" class="btn btn-primary mr-2">
                                         <i class="fas fa-filter"></i> Filter
                                     </button>
-                                    <a href="{% url 'subjects:view_subject' %}" class="btn btn-secondary">
+                                    <a href="{% url 'subject:view_subject' %}" class="btn btn-secondary">
                                         <i class="fas fa-sync-alt"></i> Reset
                                     </a>
                                 </div>

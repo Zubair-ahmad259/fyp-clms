@@ -4,66 +4,56 @@
 {% block body %}
 <div class="page-wrapper">
     <div class="content container-fluid">
-
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col">
-                    <h3 class="page-title">Assign Subject</h3>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'subjects:view_subject' %}">Subjects</a></li>
-                        <li class="breadcrumb-item active">Assign Subject</li>
-                    </ul>
+                    <h3 class="page-title">Subject Assignment Records</h3>
                 </div>
             </div>
         </div>
 
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <div class="card"> 
-            <div class="card_body">
-                <table class="table">
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-striped">
                     <thead>
-                     <tr>
-                        <th>#</th>
-                        <th>Teacher</th>
-                        <th>Subject</th>
-                        <th>batch</th>
-                        <th>section</th>
-                        <th>semester</th>
-                        <th>discipline</th>
-                        <th>sttus</th>
-                     </tr>
+                        <tr>
+                            <th>#</th>
+                            <th>Teacher</th>
+                            <th>Subject</th>
+                            <th>Batch</th>
+                            <th>Semester</th>
+                            <th>Section</th>
+                            <th>Discipline</th>
+                            <th>Status</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        {% for a  in assigns %}
+                        {% for assign in assigns %}
                         <tr>
-                            <td>{{forloop.counter}}</td>
-                            <td>{{a.teacher.name}}</td>
-                            <td>{{a.subject.name}}</td>
-                            <td>{{a.section.name}}</td>
-                            <td>{{a.semster.name}}</td>
-                            {% comment %} <td>{{a.discplines.name}}</td> {% endcomment %}
-                            <td>{{% if a.is_active %}}
-                            <span>active</span>
-                            {% else %}
-                            <span>inactive</span>
-                            {% endif %}
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ assign.teacher.first_name }}</td>
+                            <td>{{ assign.subject.name }}</td>
+                            <td>{{ assign.batch.name }}</td>
+                            <td>{{ assign.semester.number }}</td>
+                            <td>{{ assign.section.name }}</td>
+                            <td>{{ assign.discipline.field }}</td> 
+                            <td>
+                                {% if assign.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
                             </td>
                         </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No subject assignments found.</td>
+                        </tr>
                         {% endfor %}
-                    </tbody> 
-                    
+                    </tbody>
                 </table>
-
             </div>
         </div>
-
-        
-
+    </div>
+</div>
 {% endblock %}

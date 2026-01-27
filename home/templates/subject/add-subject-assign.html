@@ -10,7 +10,7 @@
                 <div class="col">
                     <h3 class="page-title">Assign Subject</h3>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'subjects:view_subject' %}">Subjects</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'subject:view_subject' %}">Subjects</a></li>
                         <li class="breadcrumb-item active">Assign Subject</li>
                     </ul>
                 </div>
@@ -18,95 +18,168 @@
         </div>
 
         {% if messages %}
-            <div>
+            <div class="mb-3">
                 {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <form method="post" class="card p-3">
-            {% csrf_token %}
+        <div class="card">
+            <div class="card-body">
+                <form method="post" class="p-3">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Discipline Field -->
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Discipline <span class="text-danger">*</span></label>
+                                <select name="disciplines" class="form-control form-select" required>
+                                    <option value="">Select Discipline</option>
+                                    {% for discipline in disciplines %}
+                                        <option value="{{ discipline.id }}">
+                                            {{ discipline.field }} ({{ discipline.program }})
+                                        </option>
+                                    {% empty %}
+                                        <option value="" disabled>No disciplines available</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">Choose the related discipline</small>
+                            </div>
+                        </div>
 
-                                        <div class="col-md-6">
-                                         <div class="form-group">
-                                          <label>Discipline <span class="text-danger">*</span></label>
-                                           <select class="form-control" id="discipline_filter">
-                                             <option value="">All Disciplines</option>
-                                              {% for discipline in discplines %}
-                                             <option value="{{ discipline.id }}" {% if selected_discipline and selected_discipline.id == discipline.id %}selected{% endif %}>
-                                               {{ discipline.field }} ({{ discipline.program }})
-                                             </option>
-                                               {% endfor %}
-                                             </select>
-                                          <small class="form-text text-muted">Choose the related discipline</small>
-                                        </div>
-                                 </div>
+                        <!-- Teacher Field -->
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Teacher <span class="text-danger">*</span></label>
+                                <select name="teacher" class="form-control form-select" required>
+                                    <option value="">Select Teacher</option>
+                                    {% for t in teachers %}
+                                        <option value="{{ t.id }}">
+                                            {% if t.first_name and t.last_name %}
+                                                {{ t.first_name }} {{ t.last_name }}
+                                            {% elif t.first_name %}
+                                                {{ t.first_name }}
+                                            {% else %}
+                                                {{ t.username }}
+                                            {% endif %}
+                                        </option>
+                                    {% empty %}
+                                        <option value="" disabled>No teachers available</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Teacher</label>
-                        <select name="teachers" class="form-control" required>
-                            <option value="">Select Teacher</option>
-                            {% for t in teachers %}
-                                <option value="{{ t.id }}">{{ t.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <!-- Subject Field -->
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Subject <span class="text-danger">*</span></label>
+                                <select name="subject" class="form-control form-select" required>
+                                    <option value="">Select Subject</option>
+                                    {% for s in subjects %}
+                                        <option value="{{ s.id }}">
+                                            {{ s.name }} 
+                                            {% if s.desciplain %}
+                                                ({{ s.desciplain.field }})
+                                            {% endif %}
+                                        </option>
+                                    {% empty %}
+                                        <option value="" disabled>No subjects available</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Batch Field -->
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Batch <span class="text-danger">*</span></label>
+                                <select name="batch" class="form-control form-select" required>
+                                    <option value="">Select Batch</option>
+                                    {% for b in batches %}
+                                        <option value="{{ b.id }}">{{ b.name }}</option>
+                                    {% empty %}
+                                        <option value="" disabled>No batches available</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Semester Field -->
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Semester <span class="text-danger">*</span></label>
+                                <select name="semester" class="form-control form-select" required>
+                                    <option value="">Select Semester</option>
+                                    {% for s in semesters %}
+                                        <option value="{{ s.id }}">{{ s.number }}</option>
+                                    {% empty %}
+                                        <option value="" disabled>No semesters available</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Section Field -->
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group">
+                                <label class="form-label">Section <span class="text-danger">*</span></label>
+                                <select name="section" class="form-control form-select" required>
+                                    <option value="">Select Section</option>
+                                    {% for s in sections %}
+                                        <option value="{{ s.id }}">{{ s.name }}</option>
+                                    {% empty %}
+                                        <option value="" disabled>No sections available</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Subject</label>
-                        <select name="subject" class="form-control" required>
-                            <option value="">Select Subject</option>
-                            {% for s in subjects %}
-                                <option value="{{ s.id }}">{{ s.name }} ({{ s.desciplain.field }})</option>
-                            {% endfor %}
-                        </select>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus-circle"></i> Assign Subject
+                            </button>
+                            <a href="{% url 'subject:view_subject' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Back to Subjects
+                            </a>
+                        </div>
                     </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Batch</label>
-                        <select name="batch" class="form-control" required>
-                            <option value="">Select Batch</option>
-                            {% for b in batches %}
-                                <option value="{{ b.id }}">{{ b.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Semester</label>
-                        <select name="semester" class="form-control" required>
-                            <option value="">Select Semester</option>
-                            {% for s in semesters %}
-                                <option value="{{ s.id }}">{{ s.number }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label>Section</label>
-                        <select name="section" class="form-control" required>
-                            <option value="">Select Section</option>
-                            {% for s in sections %}
-                                <option value="{{ s.id }}">{{ s.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
+                </form>
             </div>
-
-            <button type="submit" class="btn btn-primary">Assign Subject</button>
-        </form>
+        </div>
     </div>
 </div>
+
+<script>
+// Optional: Add form validation or dynamic loading
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        // Check if all required fields are filled
+        const requiredSelects = form.querySelectorAll('select[required]');
+        let isValid = true;
+        
+        requiredSelects.forEach(select => {
+            if (!select.value) {
+                isValid = false;
+                select.classList.add('is-invalid');
+            } else {
+                select.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill all required fields.');
+        }
+    });
+});
+</script>
 {% endblock %}
