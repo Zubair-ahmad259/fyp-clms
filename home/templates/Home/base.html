@@ -121,6 +121,9 @@
                         <ul>
                            <li><a href="{% url "teacher_list" %}">Teacher List</a></li>
                            <li><a href="{% url "add_teacher" %}">Teacher Add</a></li>
+                                     <li><a href="{% url "token_dashboard" %}">Teacher Add</a></li>
+
+                           
 
                         </ul>
                      </li>
@@ -144,11 +147,13 @@
                         <a href="#"><i class="fas fa-book-reader"></i> <span> Subjects</span> <span class="menu-arrow"></span></a>
                         <ul>
 
-                           <li><a href="{% url "subject:view_subject" %}">Subject List</a></li>
+                           <li><a href="{% url "subject:subject_dashboard" %}">Subject List</a></li>
                            <li><a href="{% url "subject:add_subject" %}">Subject Add</a></li>
                            <li><a href="{% url "subject:add_subject_assign" %}">Add subject assign</a></li>
-                           <li><a href="{% url "subject:show_subject_assign" %}">Subject Add</a></li>
-                           
+                           <li><a href="{% url "subject:show_subject_assign" %}">view Subject assign</a></li>
+                                   
+                           <li><a href="{% url "subject:show_all_subjects" %}">view Subject assign</a></li>
+
                                                 </ul>
                      </li>
 
@@ -228,7 +233,9 @@
                   
                      <li class="submenu">
                      <a href="#"><i class="fas fa-shield-alt"></i> <span> Attendance Traking </span> <span class="menu-arrow"></span></a>           
-                     </li>
+                     <li><a href="{% url 'attendance_dashboard' %}">attendance dashboard </a></li>
+
+                  </li>
                   
                      <li class="submenu">
                      <a href="#"><i class="fas fa-shield-alt"></i> <span> Acdamic calander </span> <span class="menu-arrow"></span></a>           

@@ -9,13 +9,87 @@
                 <div class="col">
                     <h3 class="page-title">Subjects</h3>
                     <ul class="breadcrumb">
+                        {% comment %} <li class="breadcrumb-item"><a href="{% url 'Home:dashboard' %}">Dashboard</a></li> {% endcomment %}
                         <li class="breadcrumb-item active">Subjects</li>
                     </ul>
                 </div>
                 <div class="col-auto text-right float-right ml-auto">
-                    <a href="{% url 'subject:add_subject' %}" class="btn btn-primary">
+                    <a href="{% url 'subject:add_subject' %}" class="btn btn-primary mr-2">
                         <i class="fas fa-plus"></i> Add Subject
                     </a>
+                    <a href="{% url 'subject:import_subjects' %}" class="btn btn-info mr-2">
+                        <i class="fas fa-file-import"></i> Import
+                    </a>
+                    <a href="{% url 'subject:export_subjects_template' %}" class="btn btn-outline-info">
+                        <i class="fas fa-download"></i> Export Template
+                    </a>
+                    <a href="{% url 'subject:show_all_subjects' %}" class="btn btn-warning ml-2">
+                        <i class="fas fa-database"></i> View All
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="dash-widget-header">
+                            <span class="dash-widget-icon bg-primary">
+                                <i class="fas fa-book"></i>
+                            </span>
+                            <div class="dash-widget-info text-right">
+                                <h3>{{ total_subjects_count|default:"0" }}</h3>
+                                <span class="widget-title">Total Subjects</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="dash-widget-header">
+                            <span class="dash-widget-icon bg-success">
+                                <i class="fas fa-check-circle"></i>
+                            </span>
+                            <div class="dash-widget-info text-right">
+                                <h3>{{ active_subjects_count|default:"0" }}</h3>
+                                <span class="widget-title">Active Subjects</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="dash-widget-header">
+                            <span class="dash-widget-icon bg-info">
+                                <i class="fas fa-university"></i>
+                            </span>
+                            <div class="dash-widget-info text-right">
+                                <h3>{{ disciplines_count|default:"0" }}</h3>
+                                <span class="widget-title">Disciplines</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="dash-widget-header">
+                            <span class="dash-widget-icon bg-warning">
+                                <i class="fas fa-layer-group"></i>
+                            </span>
+                            <div class="dash-widget-info text-right">
+                                <h3>{{ semesters_count|default:"0" }}</h3>
+                                <span class="widget-title">Semesters</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -24,72 +98,105 @@
         <div class="row mb-4">
             <div class="col-sm-12">
                 <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title"><i class="fas fa-filter"></i> Filter Subjects</h5>
+                    </div>
                     <div class="card-body">
-                        <form method="get" action="{% url 'subject:view_subject' %}">
+                        <form method="get" action="{% url 'subject:view_subject' %}" id="filterForm">
                             <div class="row">
-                              <!-- In the filter card section -->
-<div class="col-md-4">
-    <div class="form-group">
-        <label>Semester</label>
-        <select class="form-control" name="semester">
-            <option value="">All Semesters</option>
-            <option value="1" {% if request.GET.semester == "1" %}selected{% endif %}>Semester 1</option>
-            <option value="2" {% if request.GET.semester == "2" %}selected{% endif %}>Semester 2</option>
-            <option value="3" {% if request.GET.semester == "3" %}selected{% endif %}>Semester 3</option>
-            <option value="4" {% if request.GET.semester == "4" %}selected{% endif %}>Semester 4</option>
-            <option value="5" {% if request.GET.semester == "5" %}selected{% endif %}>Semester 5</option>
-            <option value="6" {% if request.GET.semester == "6" %}selected{% endif %}>Semester 6</option>
-            <option value="7" {% if request.GET.semester == "7" %}selected{% endif %}>Semester 7</option>
-            <option value="8" {% if request.GET.semester == "8" %}selected{% endif %}>Semester 8</option>
-        </select>
-    </div>
-</div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Discipline</label>
+                                        <select class="form-control" name="discipline" id="disciplineSelect">
+                                            <option value="">All Disciplines</option>
+                                            {% for discipline in disciplines %}
+                                            <option value="{{ discipline.id }}" 
+                                                {% if request.GET.discipline == discipline.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ discipline.field }} ({{ discipline.program }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Semester</label>
+                                        <select class="form-control" name="semester" id="semesterSelect">
+                                            <option value="">All Semesters</option>
+                                            {% for semester in semesters %}
+                                            <option value="{{ semester.id }}" 
+                                                {% if request.GET.semester == semester.id|stringformat:"i" %}selected{% endif %}>
+                                                Semester {{ semester.number }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Section</label>
+                                        <select class="form-control" name="section" id="sectionSelect">
+                                            <option value="">All Sections</option>
+                                            {% for section in sections %}
+                                            <option value="{{ section.id }}" 
+                                                {% if request.GET.section == section.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ section.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Subject Type</label>
                                         <select class="form-control" name="subject_type">
                                             <option value="">All Types</option>
                                             {% for value, name in subject_type_choices %}
-                                            <option value="{{ value }}" {% if request.GET.subject_type == value %}selected{% endif %}>{{ name }}</option>
+                                            <option value="{{ value }}" 
+                                                {% if request.GET.subject_type == value %}selected{% endif %}>
+                                                {{ name }}
+                                            </option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                 </div>
-                                 <div class="col-sm-6 col-md-3">
-   <div class="form-group form-focus">
-    <label class="focus-label">Discipline</label>
-    <select class="form-control" name="discipline" id="discipline" onchange="this.form.submit()">
-        <option value="">All Disciplines</option>
-        {% for discipline in disciplines %}
-            <option value="{{ discipline.id }}" 
-                {% if selected_discipline and selected_discipline.id == discipline.id %}
-                    selected
-                {% endif %}>
-                {{ discipline.field }} ({{ discipline.program }})
-            </option>
-        {% endfor %}
-    </select>
-</div>
-
-            </div>
-
                                 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Status</label>
                                         <select class="form-control" name="is_active">
-                                            <option value="">All Statuses</option>
+                                            <option value="">All Status</option>
                                             <option value="true" {% if request.GET.is_active == "true" %}selected{% endif %}>Active</option>
                                             <option value="false" {% if request.GET.is_active == "false" %}selected{% endif %}>Inactive</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-12 text-right">
+                                
+                                <div class="col-md-9">
+                                    <div class="form-group">
+                                        <label>Search</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="search" 
+                                                   placeholder="Search by subject name, code, or description..."
+                                                   value="{{ request.GET.search }}">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-primary" type="submit">
+                                                    <i class="fas fa-search"></i> Search
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-12 text-right mt-3">
                                     <button type="submit" class="btn btn-primary mr-2">
-                                        <i class="fas fa-filter"></i> Filter
+                                        <i class="fas fa-filter"></i> Apply Filters
                                     </button>
                                     <a href="{% url 'subject:view_subject' %}" class="btn btn-secondary">
-                                        <i class="fas fa-sync-alt"></i> Reset
+                                        <i class="fas fa-sync-alt"></i> Clear Filters
                                     </a>
                                 </div>
                             </div>
@@ -99,108 +206,300 @@
             </div>
         </div>
 
+        <!-- Subjects Table -->
         <div class="row">
             <div class="col-sm-12">
                 <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-list"></i> Subjects List
+                            {% if subjects %}
+                            <span class="badge badge-info ml-2">{{ subjects.paginator.count }} subjects found</span>
+                            {% endif %}
+                            {% if selected_discipline %}
+                            <span class="badge badge-primary ml-2">{{ selected_discipline.field }}</span>
+                            {% endif %}
+                            {% if selected_semester %}
+                            <span class="badge badge-primary ml-2">Semester {{ selected_semester.number }}</span>
+                            {% endif %}
+                            {% if selected_section %}
+                            <span class="badge badge-primary ml-2">{{ selected_section.name }}</span>
+                            {% endif %}
+                        </h5>
+                    </div>
                     <div class="card-body">
+                        {% if subjects %}
                         <div class="table-responsive">
-                            <table class="table table-hover table-center mb-0">
-                                <thead>
+                            <table class="table table-hover table-center mb-0 datatable">
+                                <thead class="thead-light">
                                     <tr>
                                         <th>#</th>
-                                        <th>Subject Name</th>
-                                        <th>Subject Code</th>
+                                        <th>Subject Details</th>
+                                        <th>Code</th>
                                         <th>Semester</th>
-                                        <th>Credit Hours</th>
+                                        <th>Section</th>
+                                        <th>Discipline</th>
+                                        <th>Credits</th>
                                         <th>Type</th>
+                                        <th>Prerequisites</th>
                                         <th>Status</th>
-                                        <th class="text-right">Action</th>
+                                        <th class="text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for subject in subjects %}
                                     <tr>
-                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ forloop.counter0|add:subjects.start_index }}</td>
                                         <td>
                                             <h5 class="mb-0">{{ subject.name }}</h5>
                                             {% if subject.description %}
-                                            <small class="text-muted">{{ subject.description|truncatechars:30 }}</small>
+                                            <small class="text-muted">{{ subject.description|truncatechars:50 }}</small>
                                             {% endif %}
                                         </td>
-                                        <td>{{ subject.code }}</td>
-                                        <td>{{ subject.get_semester_display }}</td>
-                                        <td>{{ subject.credit_hours }}</td>
                                         <td>
-                                            <span class="badge {% if subject.subject_type == 'core' %}badge-primary{% else %}badge-info{% endif %}">
+                                            <strong class="text-primary">{{ subject.code }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-secondary">
+                                                Semester {{ subject.semester.number }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if subject.section %}
+                                            <span class="badge badge-info">{{ subject.section.name }}</span>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-dark">
+                                                {{ subject.desciplain.field }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-light border">
+                                                {{ subject.credit_hours }} credits
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if subject.subject_type == 'core' %}badge-primary{% else %}badge-success{% endif %}">
                                                 {{ subject.get_subject_type_display }}
                                             </span>
                                         </td>
                                         <td>
+                                            {% if subject.prerequisites.all %}
+                                            <div class="prerequisite-list">
+                                                {% for prereq in subject.prerequisites.all %}
+                                                <span class="badge badge-light border mr-1 mb-1">
+                                                    {{ prereq.code }}
+                                                </span>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted">None</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
                                             <span class="badge {% if subject.is_active %}badge-success{% else %}badge-danger{% endif %}">
-                                                {% if subject.is_active %}Active{% else %}Inactive{% endif %}
+                                                {% if subject.is_active %}
+                                                <i class="fas fa-check-circle"></i> Active
+                                                {% else %}
+                                                <i class="fas fa-times-circle"></i> Inactive
+                                                {% endif %}
                                             </span>
                                         </td>
                                         <td class="text-right">
-                                            <div class="actions">
-                                                {% comment %} <a href="{% url 'edit_subject' subject.id %}" class="btn btn-sm bg-success-light mr-2"> {% endcomment %}
-                                                    <i class="fas fa-pen"></i>
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
                                                 </a>
-                                                {% comment %} <a href="{% url 'delete_subject' subject.id %}" class="btn btn-sm bg-danger-light" onclick="return confirm('Are you sure you want to delete this subject?');"> {% endcomment %}
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewSubject{{ subject.id }}">
+                                                        <i class="fas fa-eye text-info"></i> View Details
+                                                    </a>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fas fa-edit text-primary"></i> Edit
+                                                    </a>
+                                                    <a class="dropdown-item" href="{% url 'subject:check_student_prerequisites' 1 %}?subject_id={{ subject.id }}">
+                                                        <i class="fas fa-list-check text-warning"></i> Check Prerequisites
+                                                    </a>
+                                                    <div class="dropdown-divider"></div>
+                                                    {% if subject.is_active %}
+                                                    <a class="dropdown-item" href="#" onclick="toggleSubjectStatus({{ subject.id }}, false)">
+                                                        <i class="fas fa-ban text-danger"></i> Deactivate
+                                                    </a>
+                                                    {% else %}
+                                                    <a class="dropdown-item" href="#" onclick="toggleSubjectStatus({{ subject.id }}, true)">
+                                                        <i class="fas fa-check text-success"></i> Activate
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted">No subjects found. <a href="{% url 'subjects:add_subject' %}">Add your first subject</a></td>
-                                    </tr>
+                                    
+                                    <!-- View Subject Modal -->
+                                    <div class="modal fade" id="viewSubject{{ subject.id }}" tabindex="-1" role="dialog" aria-labelledby="viewSubjectLabel{{ subject.id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="viewSubjectLabel{{ subject.id }}">
+                                                        <i class="fas fa-book"></i> {{ subject.code }} - {{ subject.name }}
+                                                    </h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <h6>Subject Information</h6>
+                                                            <table class="table table-sm">
+                                                                <tr>
+                                                                    <th>Code:</th>
+                                                                    <td>{{ subject.code }}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th>Name:</th>
+                                                                    <td>{{ subject.name }}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th>Semester:</th>
+                                                                    <td>Semester {{ subject.semester.number }}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th>Section:</th>
+                                                                    <td>{{ subject.section.name|default:"Not specified" }}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th>Discipline:</th>
+                                                                    <td>{{ subject.desciplain.field }} ({{ subject.desciplain.program }})</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th>Credit Hours:</th>
+                                                                    <td>{{ subject.credit_hours }}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th>Type:</th>
+                                                                    <td>{{ subject.get_subject_type_display }}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th>Status:</th>
+                                                                    <td>
+                                                                        {% if subject.is_active %}
+                                                                        <span class="badge badge-success">Active</span>
+                                                                        {% else %}
+                                                                        <span class="badge badge-danger">Inactive</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h6>Prerequisites</h6>
+                                                            {% if subject.prerequisites.all %}
+                                                            <div class="list-group">
+                                                                {% for prereq in subject.prerequisites.all %}
+                                                                <div class="list-group-item">
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <strong>{{ prereq.code }}</strong>
+                                                                            <small class="d-block text-muted">{{ prereq.name }}</small>
+                                                                            <small>Semester {{ prereq.semester.number }}</small>
+                                                                        </div>
+                                                                        <span class="badge badge-secondary">{{ prereq.desciplain.field }}</span>
+                                                                    </div>
+                                                                </div>
+                                                                {% endfor %}
+                                                            </div>
+                                                            {% else %}
+                                                            <p class="text-muted">No prerequisites</p>
+                                                            {% endif %}
+                                                            
+                                                            {% if subject.description %}
+                                                            <h6 class="mt-3">Description</h6>
+                                                            <p>{{ subject.description }}</p>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <a href="#" class="btn btn-primary">Edit Subject</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
-
+                        
+                        <!-- Pagination -->
                         {% if subjects.has_other_pages %}
-                        <div class="mt-3">
+                        <div class="mt-4">
                             <nav aria-label="Page navigation">
                                 <ul class="pagination justify-content-center">
                                     {% if subjects.has_previous %}
                                     <li class="page-item">
                                         <a class="page-link" href="?page={{ subjects.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
+                                            <i class="fas fa-angle-left"></i>
                                         </a>
                                     </li>
                                     {% else %}
                                     <li class="page-item disabled">
                                         <a class="page-link" href="#" aria-label="Previous">
-                                            <span aria-hidden="true">&laquo;</span>
+                                            <i class="fas fa-angle-left"></i>
                                         </a>
                                     </li>
                                     {% endif %}
                                     
                                     {% for i in subjects.paginator.page_range %}
-                                    {% if subjects.number == i %}
-                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
-                                    {% else %}
-                                    <li class="page-item"><a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a></li>
-                                    {% endif %}
+                                        {% if subjects.number == i %}
+                                        <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                        {% elif i > subjects.number|add:'-3' and i < subjects.number|add:'3' %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a></li>
+                                        {% endif %}
                                     {% endfor %}
                                     
                                     {% if subjects.has_next %}
                                     <li class="page-item">
                                         <a class="page-link" href="?page={{ subjects.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
-                                            <span aria-hidden="true">&raquo;</span>
+                                            <i class="fas fa-angle-right"></i>
                                         </a>
                                     </li>
                                     {% else %}
                                     <li class="page-item disabled">
                                         <a class="page-link" href="#" aria-label="Next">
-                                            <span aria-hidden="true">&raquo;</span>
+                                            <i class="fas fa-angle-right"></i>
                                         </a>
                                     </li>
                                     {% endif %}
                                 </ul>
+                                <p class="text-center text-muted">
+                                    Showing {{ subjects.start_index }} to {{ subjects.end_index }} of {{ subjects.paginator.count }} subjects
+                                </p>
                             </nav>
+                        </div>
+                        {% endif %}
+                        
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-book fa-4x text-muted mb-3"></i>
+                            <h4>No subjects found</h4>
+                            <p class="text-muted mb-4">
+                                {% if request.GET %}
+                                No subjects match your filter criteria. Try changing your filters.
+                                {% else %}
+                                There are no subjects in the database yet.
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'subject:add_subject' %}" class="btn btn-primary mr-2">
+                                <i class="fas fa-plus"></i> Add New Subject
+                            </a>
+                            <a href="{% url 'subject:import_subjects' %}" class="btn btn-info">
+                                <i class="fas fa-file-import"></i> Import Subjects
+                            </a>
                         </div>
                         {% endif %}
                     </div>
@@ -210,44 +509,116 @@
     </div>
 </div>
 
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Initialize DataTable if available
+    if ($.fn.dataTable) {
+        $('.datatable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[0, 'asc']],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search subjects..."
+            }
+        });
+    }
+    
+    // Auto-submit filter form when discipline/semester/section changes
+    $('#disciplineSelect, #semesterSelect, #sectionSelect').change(function() {
+        $('#filterForm').submit();
+    });
+    
+    // Toggle subject status
+    window.toggleSubjectStatus = function(subjectId, activate) {
+        if (confirm(activate ? "Are you sure you want to activate this subject?" : "Are you sure you want to deactivate this subject?")) {
+            $.ajax({
+                url: '/api/subject/' + subjectId + '/toggle-status/',
+                method: 'POST',
+                data: {
+                    'activate': activate,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error toggling subject status');
+                }
+            });
+        }
+    };
+    
+    // Quick search functionality
+    $('input[name="search"]').on('keyup', function(e) {
+        if (e.keyCode === 13) { // Enter key
+            $('#filterForm').submit();
+        }
+    });
+});
+</script>
+
 <style>
-    .badge {
-        font-size: 12px;
-        font-weight: 500;
-        padding: 5px 10px;
-        border-radius: 4px;
-    }
-    .badge-primary {
-        background-color: #4e73df;
-        color: white;
-    }
-    .badge-info {
-        background-color: #36b9cc;
-        color: white;
-    }
-    .badge-success {
-        background-color: #1cc88a;
-        color: white;
-    }
-    .badge-danger {
-        background-color: #e74a3b;
-        color: white;
-    }
-    .actions a {
-        display: inline-block;
-        width: 30px;
-        height: 30px;
-        line-height: 30px;
-        text-align: center;
-        border-radius: 4px;
-    }
-    .bg-success-light {
-        background-color: rgba(28, 200, 138, 0.1);
-        color: #1cc88a;
-    }
-    .bg-danger-light {
-        background-color: rgba(231, 74, 59, 0.1);
-        color: #e74a3b;
-    }
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+.prerequisite-list .badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+}
+.dropdown-action .dropdown-menu {
+    min-width: 150px;
+}
+.dash-widget-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+.dash-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.dash-widget-info h3 {
+    margin-bottom: 0;
+    font-size: 1.5rem;
+}
+.dash-widget-info span {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+.modal-body .table-sm th {
+    width: 120px;
+}
+.action-icon {
+    color: #6c757d;
+    font-size: 1.2rem;
+}
+.action-icon:hover {
+    color: #007bff;
+}
+.list-group-item {
+    padding: 0.5rem 1rem;
+    border-left: none;
+    border-right: none;
+}
+.list-group-item:first-child {
+    border-top: none;
+}
+.list-group-item:last-child {
+    border-bottom: none;
+}
 </style>
 {% endblock %}

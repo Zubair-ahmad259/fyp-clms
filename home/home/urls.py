@@ -16,6 +16,10 @@ urlpatterns = [
     path('stu', include("stu.urls")),
     path('Academic', include("Academic.urls")),
     path('exam_mang', include("exam_mang.urls")),
+    path('attendance', include("attendance.urls")),
+    path('qr_tokens', include("qr_tokens.urls")),
+
+
 
 
 

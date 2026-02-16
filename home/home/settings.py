@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'stu',
     'Academic',
     'exam_mang',
+    'attendance',
+    'qr_tokens',
 
 
 

@@ -1,0 +1,109 @@
+{% extends "Home/base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+  <div class="content container-fluid">
+
+    <div class="page-header">
+      <h3 class="page-title">Token Dashboard</h3>
+      <p class="text-muted">Manage and track all your requests</p>
+    </div>
+
+    <div class="row">
+
+      <!-- Create Token -->
+      <div class="col-md-3">
+        <div class="card text-center shadow-sm" onclick="location.href='{% url 'token_types' %}'">
+          <div class="card-body">
+            <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
+            <h6>Create Token</h6>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Tokens -->
+      <div class="col-md-3">
+        <div class="card text-center shadow-sm" onclick="location.href='{% url 'student_tokens' %}'">
+          <div class="card-body">
+            <i class="fas fa-ticket-alt fa-2x text-success mb-2"></i>
+            <h6>My Tokens</h6>
+            <p class="mb-0 text-muted">{{ my_tokens_count }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Tokens -->
+      <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+            <h6>Pending</h6>
+            <p class="mb-0 text-muted">{{ pending_tokens }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Tokens -->
+      <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+          <div class="card-body">
+            <i class="fas fa-check-circle fa-2x text-info mb-2"></i>
+            <h6>Completed</h6>
+            <p class="mb-0 text-muted">{{ completed_tokens }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent Tokens -->
+    <div class="card mt-4">
+      <div class="card-header">
+        <h5 class="mb-0">Recent Tokens</h5>
+      </div>
+      <div class="card-body table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for token in recent_tokens %}
+            <tr>
+              <td>{{ token.token_number }}</td>
+              <td>{{ token.get_token_type_display }}</td>
+              <td>{{ token.title }}</td>
+              <td>
+                <span class="badge bg-info">
+                  {{ token.get_status_display }}
+                </span>
+              </td>
+              <td>{{ token.created_at|date:"d M Y" }}</td>
+              <td>
+                <a href="{% url 'view_token' token.id %}" class="btn btn-sm btn-outline-primary">
+                  View
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">
+                No tokens available
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
