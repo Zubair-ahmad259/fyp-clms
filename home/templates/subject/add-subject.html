@@ -9,13 +9,20 @@
                 <div class="col">
                     <h3 class="page-title">Add New Subject</h3>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'subjects:view_subject' %}">Subjects</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'subject:view_subject' %}">Subjects</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'subject:import_subjects' %}">Import</a></li>
                         <li class="breadcrumb-item active">Add Subject</li>
                     </ul>
                 </div>
                 <div class="col-auto text-right float-right ml-auto">
-                    <a href="{% url 'subjects:view_subject' %}" class="btn btn-outline-primary">
+                    <a href="{% url 'subject:export_subjects_template' %}" class="btn btn-outline-info mr-2">
+                        <i class="fas fa-download"></i> Download Template
+                    </a>
+                    <a href="{% url 'subject:view_subject' %}" class="btn btn-outline-primary">
                         <i class="fas fa-list"></i> View All Subjects
+                    </a>
+                    <a href="{% url 'subject:show_all_subjects' %}" class="btn btn-warning ml-2">
+                        <i class="fas fa-database"></i> View Database
                     </a>
                 </div>
             </div>
@@ -24,16 +31,21 @@
         <div class="row">
             <div class="col-sm-12">
                 <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-book"></i> Add New Subject
+                            <small class="text-muted">Fill in the subject details below</small>
+                        </h5>
+                    </div>
                     <div class="card-body">
-                        <form method="post" action="{% url 'subjects:add_subject' %}" id="subjectForm" novalidate>
+                        <form method="post" action="{% url 'subject:add_subject' %}" id="subjectForm" novalidate>
                             {% csrf_token %}
                             
                             <div class="row">
                                 <div class="col-12">
-                                    <h5 class="form-title"><span>Subject Information</span></h5>
+                                    <h5 class="form-title"><span>Basic Information</span></h5>
                                 </div>
 
-                          
                                 <!-- Subject Name -->
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -43,46 +55,71 @@
                                         <small class="form-text text-muted">Full subject name</small>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Discipline <span class="text-danger">*</span></label>
-                                             <select class="form-control" id="discipline_filter" name="discipline" required>
-                                             <option value="">All Disciplines</option>
-                                              {% for discipline in disciplines %}
-                                             <option value="{{ discipline.id }}" {% if selected_discipline and selected_discipline.id == discipline.id %}selected{% endif %}>
-                                               {{ discipline.field }} ({{ discipline.program }})
-                                             </option>
-                                               {% endfor %}
-                                             </select>
-                                        <small class="form-text text-muted">Choose the related discipline</small>
-                                    </div>
-                                </div>
-
-
-                                <!-- Left Column -->
+                                
+                                <!-- Subject Code -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Subject Code <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="code" required
-                                               placeholder="e.g. CS101" pattern="[A-Za-z]{2,5}\d{3}"
-                                               title="Subject code should be 2-5 letters followed by 3 numbers">
+                                               placeholder="e.g. CS101" id="subjectCode">
                                         <small class="form-text text-muted">Unique course code</small>
                                     </div>
                                 </div>
-                                
-                                <!-- Right Column -->
+
+                                <!-- Step 1: Discipline -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Discipline <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="discipline_select" name="discipline" required>
+                                            <option value="">Select Discipline</option>
+                                            {% for discipline in disciplines %}
+                                            <option value="{{ discipline.id }}">
+                                                {{ discipline.field }} ({{ discipline.program }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">Choose the related discipline</small>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: Batch (Dynamic based on Discipline) -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Batch</label>
+                                        <select class="form-control" id="batch_select" name="batch">
+                                            <option value="">Select Batch (Optional)</option>
+                                            <!-- Batches will be loaded dynamically -->
+                                        </select>
+                                        <small class="form-text text-muted">Optional: Select batch for section filtering</small>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3: Semester -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Semester <span class="text-danger">*</span></label>
-                                        <select class="form-control" name="semester" required>
+                                        <select class="form-control" id="semester_select" name="semester" required>
                                             <option value="">Select Semester</option>
-                                            {% for value, name in semester_choices %}
-                                            <option value="{{ value }}">{{ name }}</option>
+                                            {% for semester in semesters %}
+                                            <option value="{{ semester.id }}">Semester {{ semester.number }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                 </div>
 
+                                <!-- Step 4: Section (Dynamic based on Discipline, Batch, and Semester) -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Section</label>
+                                        <select class="form-control" id="section_select" name="section">
+                                            <option value="">Select Section (Optional)</option>
+                                            <!-- Sections will be loaded dynamically -->
+                                        </select>
+                                        <small class="form-text text-muted">Optional: Select specific section</small>
+                                    </div>
+                                </div>
+
+                                <!-- Credit Hours -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Credit Hours</label>
@@ -92,6 +129,7 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Subject Type -->
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Subject Type</label>
@@ -103,7 +141,126 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Full Width Fields -->
+                                <!-- Prerequisites Section - UPDATED -->
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <h5 class="form-title">
+                                            <span>Prerequisites</span>
+                                            <small class="text-muted ml-2">(Select subjects that must be completed before this subject)</small>
+                                        </h5>
+                                        
+                                        <!-- Prerequisites Mode Toggle -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-12">
+                                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                    <label class="btn btn-outline-primary active">
+                                                        <input type="radio" name="prereqMode" id="autoMode" value="auto" checked> Auto Filter
+                                                    </label>
+                                                    <label class="btn btn-outline-info">
+                                                        <input type="radio" name="prereqMode" id="allMode" value="all"> Show All Subjects
+                                                    </label>
+                                                </div>
+                                                <small class="form-text text-muted">
+                                                    <strong>Auto Filter:</strong> Shows subjects from same/lower semesters in selected discipline<br>
+                                                    <strong>Show All:</strong> Displays all subjects from database (for debugging)
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Prerequisites Loading Message -->
+                                        <div id="prereqLoading" class="text-center d-none mb-3">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="sr-only">Loading prerequisites...</span>
+                                            </div>
+                                            <p>Loading prerequisite suggestions...</p>
+                                        </div>
+                                        
+                                        <!-- All Subjects Debug Info -->
+                                        <div id="allSubjectsInfo" class="alert alert-info d-none">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Debug Mode:</strong> Showing ALL subjects from database. Total: <span id="totalSubjectsCount">0</span> subjects
+                                            <button type="button" class="btn btn-sm btn-outline-info ml-2" id="refreshAllSubjects">
+                                                <i class="fas fa-redo"></i> Refresh
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Prerequisites Selection Area -->
+                                        <div class="prerequisites-container">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h6 class="mb-0">
+                                                                <span id="prereqTitle">Available Prerequisites</span>
+                                                                <small id="prereqSubtitle" class="text-muted">Select from subjects in same or previous semesters</small>
+                                                            </h6>
+                                                            <div class="card-tools">
+                                                                <div class="input-group input-group-sm" style="width: 200px;">
+                                                                    <input type="text" id="subjectSearch" class="form-control" placeholder="Search subjects...">
+                                                                    <div class="input-group-append">
+                                                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                                            <div id="prerequisitesList">
+                                                                <div class="text-center text-muted py-3">
+                                                                    <i class="fas fa-info-circle"></i>
+                                                                    Select a discipline and semester to see available prerequisites
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-footer">
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <small class="text-muted">
+                                                                        <span id="availableCount">0</span> subjects available
+                                                                    </small>
+                                                                </div>
+                                                                <div class="col-md-6 text-right">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllPrereqs">
+                                                                        <i class="fas fa-check-square"></i> Select All
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary ml-1" id="deselectAllPrereqs">
+                                                                        <i class="fas fa-times-circle"></i> Deselect All
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Selected Prerequisites Display -->
+                                            <div class="row mt-3">
+                                                <div class="col-md-12">
+                                                    <div class="card bg-light">
+                                                        <div class="card-header">
+                                                            <h6 class="mb-0">Selected Prerequisites</h6>
+                                                            <small class="text-muted">
+                                                                <span id="selectedCount">0</span> prerequisites selected
+                                                            </small>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div id="selectedPrereqs" class="selected-prereqs-container">
+                                                                <span class="text-muted">No prerequisites selected</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-footer">
+                                                            <small class="text-danger" id="prereqWarning" style="display: none;">
+                                                                <i class="fas fa-exclamation-triangle"></i>
+                                                                Warning: Prerequisites are selected but will only be saved if discipline and semester are properly selected
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
                                 <div class="col-12">
                                     <div class="form-group">
                                         <label>Description</label>
@@ -120,10 +277,17 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Action Buttons -->
                                 <div class="col-12 mt-3">
-                                    <button type="submit" class="btn btn-primary">Submit</button>
-                                    <button type="reset" class="btn btn-secondary ml-2">Reset</button>
-                                    <a href="{% url 'subjects:view_subject' %}" class="btn btn-link">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Subject
+                                    </button>
+                                    <button type="reset" class="btn btn-secondary ml-2">
+                                        <i class="fas fa-redo"></i> Reset
+                                    </button>
+                                    <a href="{% url 'subject:view_subject' %}" class="btn btn-link">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
                                 </div>
                             </div>
                         </form>
@@ -134,69 +298,571 @@
     </div>
 </div>
 
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('subjectForm');
-    const codeInput = form.querySelector('[name="code"]');
+$(document).ready(function() {
+    const form = $('#subjectForm');
+    const codeInput = $('#subjectCode');
+    const disciplineSelect = $('#discipline_select');
+    const batchSelect = $('#batch_select');
+    const semesterSelect = $('#semester_select');
+    const sectionSelect = $('#section_select');
+    const prereqList = $('#prerequisitesList');
+    const selectedPrereqs = $('#selectedPrereqs');
+    const prereqLoading = $('#prereqLoading');
+    const allSubjectsInfo = $('#allSubjectsInfo');
+    const subjectSearch = $('#subjectSearch');
+    const availableCount = $('#availableCount');
+    const selectedCount = $('#selectedCount');
+    const totalSubjectsCount = $('#totalSubjectsCount');
+    const prereqTitle = $('#prereqTitle');
+    const prereqSubtitle = $('#prereqSubtitle');
+    const prereqWarning = $('#prereqWarning');
     
-    codeInput.addEventListener('input', function() {
+    let selectedPrerequisiteIds = [];
+    let allSubjects = [];
+    let currentMode = 'auto'; // 'auto' or 'all'
+    
+    // Auto-uppercase subject code
+    codeInput.on('input', function() {
         this.value = this.value.toUpperCase();
     });
     
-    form.addEventListener('submit', function(e) {
-        let isValid = true;
-        const requiredFields = form.querySelectorAll('[required]');
+    // Toggle between auto and all modes
+    $('input[name="prereqMode"]').change(function() {
+        currentMode = $(this).val();
+        console.log("Mode changed to:", currentMode);
         
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                isValid = false;
-                field.classList.add('is-invalid');
-                
-                if (!field.nextElementSibling.classList.contains('invalid-feedback')) {
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'invalid-feedback';
-                    errorDiv.textContent = 'This field is required';
-                    field.parentNode.insertBefore(errorDiv, field.nextSibling);
-                }
-            } else {
-                field.classList.remove('is-invalid');
-                const feedback = field.nextElementSibling;
-                if (feedback && feedback.classList.contains('invalid-feedback')) {
-                    feedback.remove();
-                }
-            }
-        });
-        
-        const codePattern = /^[A-Za-z]{2,5}\d{3}$/;
-        if (!codePattern.test(codeInput.value)) {
-            isValid = false;
-            codeInput.classList.add('is-invalid');
-            if (!codeInput.nextElementSibling.classList.contains('invalid-feedback')) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'invalid-feedback';
-                errorDiv.textContent = 'Format: 2-5 letters followed by 3 numbers (e.g. CS101)';
-                codeInput.parentNode.insertBefore(errorDiv, codeInput.nextSibling);
-            }
-        }
-        
-        if (!isValid) {
-            e.preventDefault();
-            const firstError = form.querySelector('.is-invalid');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+        if (currentMode === 'all') {
+            allSubjectsInfo.removeClass('d-none');
+            prereqTitle.text('All Subjects in Database');
+            prereqSubtitle.text('Select any subject as prerequisite (Debug Mode)');
+            loadAllSubjects();
+        } else {
+            allSubjectsInfo.addClass('d-none');
+            prereqTitle.text('Available Prerequisites');
+            prereqSubtitle.text('Select from subjects in same or previous semesters');
+            loadPrerequisites(
+                disciplineSelect.val(), 
+                semesterSelect.val(), 
+                sectionSelect.val()
+            );
         }
     });
     
-    form.addEventListener('input', function(e) {
-        if (e.target.hasAttribute('required') && e.target.value.trim()) {
-            e.target.classList.remove('is-invalid');
-            const feedback = e.target.nextElementSibling;
-            if (feedback && feedback.classList.contains('invalid-feedback')) {
-                feedback.remove();
-            }
+    // Refresh all subjects
+    $('#refreshAllSubjects').click(function() {
+        if (currentMode === 'all') {
+            loadAllSubjects();
         }
     });
+    
+    // Search subjects
+    subjectSearch.on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        filterSubjects(searchTerm);
+    });
+    
+    // Select all prerequisites
+    $('#selectAllPrereqs').click(function() {
+        $('.prerequisite-checkbox').prop('checked', true).trigger('change');
+    });
+    
+    // Deselect all prerequisites
+    $('#deselectAllPrereqs').click(function() {
+        $('.prerequisite-checkbox').prop('checked', false).trigger('change');
+    });
+    
+    // Filter subjects based on search term
+    function filterSubjects(searchTerm) {
+        if (!searchTerm) {
+            // Show all if no search term
+            $('.prerequisite-checkbox').parent().show();
+            updateAvailableCount();
+            return;
+        }
+        
+        let visibleCount = 0;
+        $('.prerequisite-checkbox').each(function() {
+            const label = $(this).next('label').text().toLowerCase();
+            const code = $(this).data('code').toLowerCase();
+            const name = $(this).data('name').toLowerCase();
+            
+            if (label.includes(searchTerm) || code.includes(searchTerm) || name.includes(searchTerm)) {
+                $(this).parent().show();
+                visibleCount++;
+            } else {
+                $(this).parent().hide();
+            }
+        });
+        
+        availableCount.text(visibleCount);
+    }
+    
+    // Function to load ALL subjects from database
+    function loadAllSubjects() {
+        prereqLoading.removeClass('d-none');
+        prereqList.addClass('d-none');
+        
+        $.ajax({
+            url: '{% url "subject:show_all_subjects" %}',
+            method: 'GET',
+            dataType: 'html', // We're getting HTML response
+            success: function(response) {
+                // Parse the HTML response to extract subject data
+                const tempDiv = $('<div>').html(response);
+                const subjects = [];
+                
+                // Extract subject data from the table
+                tempDiv.find('table tbody tr').each(function() {
+                    const subjectId = $(this).find('td:eq(0)').text().trim();
+                    const code = $(this).find('td:eq(1)').text().trim();
+                    const name = $(this).find('td:eq(2)').text().trim();
+                    const semester = $(this).find('td:eq(3)').text().replace('Sem', '').trim();
+                    const section = $(this).find('td:eq(4)').text().trim();
+                    const discipline = $(this).find('td:eq(5)').text().trim();
+                    
+                    if (subjectId && code && name) {
+                        subjects.push({
+                            id: subjectId,
+                            code: code,
+                            name: name,
+                            semester: semester,
+                            section: section,
+                            discipline: discipline,
+                            display: `${code} - ${name} (Sem ${semester}, ${discipline})`
+                        });
+                    }
+                });
+                
+                displaySubjects(subjects, 'all');
+                totalSubjectsCount.text(subjects.length);
+                prereqLoading.addClass('d-none');
+                prereqList.removeClass('d-none');
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading all subjects:", error);
+                
+                // Fallback: Use API to get all subjects
+                $.ajax({
+                    url: '{% url "subject:prerequisite_suggestions" %}',
+                    method: 'GET',
+                    data: {
+                        discipline_id: 1, // First discipline
+                        semester_id: 8, // Highest semester
+                        section_id: ''
+                    },
+                    success: function(response) {
+                        displaySubjects(response.suggestions || [], 'all');
+                        totalSubjectsCount.text(response.suggestions ? response.suggestions.length : 0);
+                        prereqLoading.addClass('d-none');
+                        prereqList.removeClass('d-none');
+                    },
+                    error: function() {
+                        prereqList.html('<div class="text-center text-danger py-3"><i class="fas fa-exclamation-circle"></i> Error loading all subjects</div>');
+                        prereqLoading.addClass('d-none');
+                        prereqList.removeClass('d-none');
+                    }
+                });
+            }
+        });
+    }
+    
+    // Function to load batches based on discipline
+    function loadBatches(disciplineId) {
+        if (!disciplineId) {
+            batchSelect.empty().append('<option value="">Select Batch (Optional)</option>');
+            return;
+        }
+        
+        $.ajax({
+            url: '{% url "subject:get_batches_for_discipline" %}',
+            method: 'GET',
+            data: { discipline_id: disciplineId },
+            beforeSend: function() {
+                batchSelect.prop('disabled', true);
+                batchSelect.html('<option value="">Loading batches...</option>');
+            },
+            success: function(response) {
+                batchSelect.empty().append('<option value="">Select Batch (Optional)</option>');
+                if (response.batches && response.batches.length > 0) {
+                    response.batches.forEach(function(batch) {
+                        batchSelect.append(`<option value="${batch.id}">${batch.name}</option>`);
+                    });
+                } else {
+                    batchSelect.append('<option value="">No batches found</option>');
+                }
+                batchSelect.prop('disabled', false);
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading batches:", error);
+                batchSelect.empty().append('<option value="">Error loading batches</option>');
+                batchSelect.prop('disabled', false);
+            }
+        });
+    }
+    
+    // Function to load sections based on discipline, batch, and semester
+    function loadSections(disciplineId, batchId, semesterId) {
+        if (!disciplineId) {
+            sectionSelect.empty().append('<option value="">Select Section (Optional)</option>');
+            return;
+        }
+        
+        $.ajax({
+            url: '{% url "subject:get_sections_for_discipline" %}',
+            method: 'GET',
+            data: {
+                discipline_id: disciplineId,
+                batch_id: batchId || '',
+                semester_id: semesterId || ''
+            },
+            beforeSend: function() {
+                sectionSelect.prop('disabled', true);
+                sectionSelect.html('<option value="">Loading sections...</option>');
+            },
+            success: function(response) {
+                sectionSelect.empty().append('<option value="">Select Section (Optional)</option>');
+                if (response.sections && response.sections.length > 0) {
+                    response.sections.forEach(function(section) {
+                        const displayText = section.batch ? 
+                            `${section.name} - ${section.batch}` : 
+                            section.name;
+                        sectionSelect.append(`<option value="${section.id}">${displayText}</option>`);
+                    });
+                } else {
+                    sectionSelect.append('<option value="">No sections found</option>');
+                }
+                sectionSelect.prop('disabled', false);
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading sections:", error);
+                sectionSelect.empty().append('<option value="">Error loading sections</option>');
+                sectionSelect.prop('disabled', false);
+            }
+        });
+    }
+    
+    // Function to load prerequisites based on discipline and semester
+    function loadPrerequisites(disciplineId, semesterId, sectionId) {
+        console.log("Loading prerequisites:", { disciplineId, semesterId, sectionId });
+        
+        if (currentMode === 'all') {
+            loadAllSubjects();
+            return;
+        }
+        
+        if (!disciplineId || !semesterId) {
+            prereqList.html('<div class="text-center text-muted py-3"><i class="fas fa-info-circle"></i> Select a discipline and semester to see available prerequisites</div>');
+            availableCount.text('0');
+            return;
+        }
+        
+        prereqLoading.removeClass('d-none');
+        prereqList.addClass('d-none');
+        
+        $.ajax({
+            url: '{% url "subject:prerequisite_suggestions" %}',
+            method: 'GET',
+            data: {
+                discipline_id: disciplineId,
+                semester_id: semesterId,
+                section_id: sectionId || ''
+            },
+            success: function(response) {
+                console.log("Prerequisites response:", response);
+                displaySubjects(response.suggestions || [], 'auto');
+                prereqLoading.addClass('d-none');
+                prereqList.removeClass('d-none');
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading prerequisites:", error);
+                prereqList.html('<div class="text-center text-danger py-3"><i class="fas fa-exclamation-circle"></i> Error loading prerequisites</div>');
+                availableCount.text('0');
+                prereqLoading.addClass('d-none');
+                prereqList.removeClass('d-none');
+            }
+        });
+    }
+    
+    // Display subjects in the list
+    function displaySubjects(subjects, mode) {
+        prereqList.empty();
+        allSubjects = subjects;
+        
+        if (subjects.length === 0) {
+            let message = '';
+            if (mode === 'all') {
+                message = '<div class="text-center text-warning py-3"><i class="fas fa-exclamation-triangle"></i> No subjects found in database</div>';
+            } else {
+                message = '<div class="text-center text-muted py-3"><i class="fas fa-info-circle"></i> No prerequisite subjects available for this combination</div>';
+            }
+            prereqList.html(message);
+            availableCount.text('0');
+            return;
+        }
+        
+        subjects.forEach(function(subject) {
+            const isSelected = selectedPrerequisiteIds.includes(subject.id.toString());
+            const checkbox = `
+                <div class="form-check mb-2 subject-item">
+                    <input class="form-check-input prerequisite-checkbox" 
+                           type="checkbox" 
+                           name="prerequisites" 
+                           value="${subject.id}" 
+                           id="prereq_${subject.id}"
+                           ${isSelected ? 'checked' : ''}
+                           data-code="${subject.code}"
+                           data-name="${subject.name}"
+                           data-semester="${subject.semester}"
+                           data-discipline="${subject.discipline || ''}">
+                    <label class="form-check-label" for="prereq_${subject.id}">
+                        <strong>${subject.code}</strong> - ${subject.name} 
+                        <small class="text-muted">(Sem ${subject.semester}
+                        ${subject.discipline ? ', ' + subject.discipline : ''}
+                        ${subject.section ? ', Sec: ' + subject.section : ''})</small>
+                    </label>
+                </div>
+            `;
+            prereqList.append(checkbox);
+        });
+        
+        updateAvailableCount();
+        updateSelectedPrerequisitesDisplay();
+    }
+    
+    // Update available count
+    function updateAvailableCount() {
+        const count = $('.subject-item:visible').length;
+        availableCount.text(count);
+    }
+    
+    // Update selected prerequisites display
+    function updateSelectedPrerequisitesDisplay() {
+        const checkedBoxes = $('.prerequisite-checkbox:checked');
+        selectedCount.text(checkedBoxes.length);
+        
+        if (checkedBoxes.length === 0) {
+            selectedPrereqs.html('<span class="text-muted">No prerequisites selected</span>');
+            prereqWarning.hide();
+            return;
+        }
+        
+        let html = '<div class="row">';
+        checkedBoxes.each(function() {
+            const code = $(this).data('code');
+            const name = $(this).data('name');
+            const semester = $(this).data('semester');
+            const discipline = $(this).data('discipline');
+            const id = $(this).val();
+            
+            html += `
+                <div class="col-md-4 mb-2">
+                    <div class="card ${discipline ? 'border-primary' : 'border-warning'}">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">${code}</h6>
+                                    <small class="text-muted">${name}</small>
+                                    <br>
+                                    <small>Sem ${semester}</small>
+                                    ${discipline ? `<br><small class="text-info">${discipline}</small>` : ''}
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-prereq" data-id="${id}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        selectedPrereqs.html(html);
+        
+        // Show warning if prerequisites are selected but discipline/semester not set
+        if (!disciplineSelect.val() || !semesterSelect.val()) {
+            prereqWarning.show();
+        } else {
+            prereqWarning.hide();
+        }
+    }
+    
+    // Handle discipline change
+    disciplineSelect.on('change', function() {
+        const disciplineId = $(this).val();
+        console.log("Discipline changed to:", disciplineId);
+        
+        loadBatches(disciplineId);
+        loadSections(disciplineId, '', '');
+        
+        // Clear prerequisites when discipline changes in auto mode
+        if (currentMode === 'auto') {
+            selectedPrerequisiteIds = [];
+        }
+        loadPrerequisites(disciplineId, semesterSelect.val(), sectionSelect.val());
+    });
+    
+    // Handle batch change
+    batchSelect.on('change', function() {
+        const disciplineId = disciplineSelect.val();
+        const batchId = $(this).val();
+        const semesterId = semesterSelect.val();
+        console.log("Batch changed to:", batchId);
+        loadSections(disciplineId, batchId, semesterId);
+    });
+    
+    // Handle semester change
+    semesterSelect.on('change', function() {
+        const disciplineId = disciplineSelect.val();
+        const semesterId = $(this).val();
+        const batchId = batchSelect.val();
+        const sectionId = sectionSelect.val();
+        
+        console.log("Semester changed to:", semesterId);
+        
+        // Load sections for this semester
+        loadSections(disciplineId, batchId, semesterId);
+        
+        // Load prerequisites
+        loadPrerequisites(disciplineId, semesterId, sectionId);
+    });
+    
+    // Handle section change
+    sectionSelect.on('change', function() {
+        const disciplineId = disciplineSelect.val();
+        const semesterId = semesterSelect.val();
+        const sectionId = $(this).val();
+        console.log("Section changed to:", sectionId);
+        loadPrerequisites(disciplineId, semesterId, sectionId);
+    });
+    
+    // Handle prerequisite checkbox change
+    $(document).on('change', '.prerequisite-checkbox', function() {
+        const id = $(this).val();
+        
+        if ($(this).is(':checked')) {
+            if (!selectedPrerequisiteIds.includes(id)) {
+                selectedPrerequisiteIds.push(id);
+            }
+        } else {
+            selectedPrerequisiteIds = selectedPrerequisiteIds.filter(item => item != id);
+        }
+        
+        updateSelectedPrerequisitesDisplay();
+    });
+    
+    // Handle remove prerequisite
+    $(document).on('click', '.remove-prereq', function() {
+        const id = $(this).data('id');
+        selectedPrerequisiteIds = selectedPrerequisiteIds.filter(item => item != id);
+        $(`#prereq_${id}`).prop('checked', false);
+        updateSelectedPrerequisitesDisplay();
+    });
+    
+    // Form validation
+    form.on('submit', function(e) {
+        let isValid = true;
+        
+        // Clear previous errors
+        $('.is-invalid').removeClass('is-invalid');
+        $('.invalid-feedback').remove();
+        
+        // Check required fields
+        $('[required]').each(function() {
+            if (!$(this).val().trim()) {
+                isValid = false;
+                $(this).addClass('is-invalid');
+                $(this).after(`<div class="invalid-feedback">This field is required</div>`);
+            }
+        });
+        
+        // Validate subject code format (optional)
+        const codePattern = /^[A-Za-z]{2,5}\d{3}$/;
+        if (codeInput.val() && !codePattern.test(codeInput.val())) {
+            isValid = false;
+            codeInput.addClass('is-invalid');
+            codeInput.after(`<div class="invalid-feedback">Format: 2-5 letters followed by 3 numbers (e.g. CS101)</div>`);
+        }
+        
+        // Clear any existing hidden prerequisite fields
+        $('input[name="prerequisites"][type="hidden"]').remove();
+        
+        // Add hidden field for prerequisites
+        selectedPrerequisiteIds.forEach(function(id, index) {
+            form.append(`<input type="hidden" name="prerequisites" value="${id}">`);
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            $('.is-invalid').first().focus();
+        }
+    });
+    
+    // Clear errors on input
+    form.on('input', '[required]', function() {
+        if ($(this).val().trim()) {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
+    
+    // Initialize with all subjects mode if database is empty
+    setTimeout(function() {
+        // Check if we should start in all mode
+        if (disciplineSelect.val() === '' && semesterSelect.val() === '') {
+            $('#allMode').prop('checked', true).trigger('change');
+        }
+    }, 1000);
 });
 </script>
+<style>
+.prerequisite-checkbox:checked + label {
+    font-weight: bold;
+    color: #007bff;
+}
+.subject-item {
+    transition: all 0.3s ease;
+}
+.subject-item:hover {
+    background-color: #f8f9fa;
+    padding-left: 10px;
+    border-left: 3px solid #007bff;
+}
+.selected-prereqs-container .card {
+    transition: all 0.3s ease;
+}
+.selected-prereqs-container .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.remove-prereq {
+    transition: all 0.3s ease;
+}
+.remove-prereq:hover {
+    background-color: #dc3545;
+    color: white;
+}
+.prerequisites-container .card-body {
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f8f9fa;
+}
+.prerequisites-container .card-body::-webkit-scrollbar {
+    width: 6px;
+}
+.prerequisites-container .card-body::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+.prerequisites-container .card-body::-webkit-scrollbar-thumb {
+    background-color: #007bff;
+    border-radius: 3px;
+}
+.btn-group-toggle .btn {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+}
+#subjectSearch {
+    font-size: 0.85rem;
+}
+</style>
 {% endblock %}

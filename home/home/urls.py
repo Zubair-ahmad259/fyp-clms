@@ -8,12 +8,26 @@ urlpatterns = [
     path('', include("deptts.urls")),
     path('student', include("student.urls")),
     path('teachers', include("teachers.urls")),
-    path('subjects', include("subjects.urls")),
-    path('ddc', include("ddc.urls")),
+    path('subject', include("subject.urls")),
+     path('ddcomit', include("ddcomit.urls")),
     path('home_auth', include("home_auth.urls")),
     path('head', include("head.urls")),
     path('fee_system', include("fee_system.urls")),
     path('stu', include("stu.urls")),
+    path('Academic', include("Academic.urls")),
+    path('exam_mang', include("exam_mang.urls")),
+    path('attendance', include("attendance.urls")),
+    path('token_app', include("token_app.urls")),
+    path('timetable', include("timetable.urls")),
+
+
+
+
+
+
+
+
+
 
 
 

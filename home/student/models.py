@@ -1,72 +1,8 @@
+# student/models.py
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-
 from home_auth.models import CustomUser
+from Academic.models import Discipline, Batch, Semester, Section  # Import from academic app
 
-    
- 
-class Discipline(models.Model):
-    PROGRAM_CHOICES = [
-        ('BS', 'BS'),
-        ('MS', 'MS'),
-        ('PhD', 'PhD'),
-    ]
-
-    FIELD_CHOICES = [
-        ('Computer Science', 'Computer Science'),
-        ('Software Engineering', 'Software Engineering'),
-        ('ARTIFICIAL INTELLIGENCE', 'ARTIFICIAL INTELLIGENCE'),
-        ('CYBER SECURITY', 'CYBER SECURITY'),
-        ('DATA SCIENCE', 'DATA SCIENCE'),
-
-
-    ]
-
-    program = models.CharField(max_length=10, choices=PROGRAM_CHOICES)
-    field = models.CharField(max_length=50, choices=FIELD_CHOICES)
-
-    class Meta:
-        unique_together = ('program', 'field')
-        verbose_name = "Discipline"
-        verbose_name_plural = "Disciplines"
-
-    def __str__(self):
-        return f"{self.program} in {self.field}"
-
-
-
-class Batch(models.Model):
-    name = models.CharField(max_length=50, unique=False)
-    start_year = models.IntegerField()
-    end_year = models.IntegerField()
-    discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE)  
-
-
-    def __str__(self):
-        return self.name
-
-class Semester(models.Model):
-    number = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(8)],
-        unique=True
-    )
-    description = models.CharField(max_length=100, blank=True)
-
-    def __str__(self):
-        return f"Semester {self.number}"
-
-class Section(models.Model):
-    name = models.CharField(max_length=10, unique=False)
-    batch = models.ForeignKey(Batch, on_delete=models.SET_NULL, null=True, blank=True)
-    description = models.CharField(max_length=100, blank=True)
-
-    class Meta:
-        unique_together = ('name', 'batch')  # Ensures unique section names per batch
-
-    def __str__(self):
-        if self.batch:
-            return f"{self.name} ({self.batch.name})"
-        return self.name
 
 class Parent(models.Model):
     father_name = models.CharField(max_length=100)
@@ -77,12 +13,11 @@ class Parent(models.Model):
 
     def __str__(self):
         return f"{self.father_name}"
-    
+
 
 class Student(models.Model):
-
-    
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
+    
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
@@ -98,18 +33,15 @@ class Student(models.Model):
     dob = models.DateField()
     email = models.EmailField(unique=True)
     contact_number = models.CharField(max_length=15, blank=True)
-
     image = models.ImageField(upload_to='students/', blank=True, null=True)
 
-    # Academic Info
+    # Academic Info - Now using models from academic app
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE)  
+    discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE)
 
-    
-
-    parent = models.OneToOneField(Parent, on_delete=models.CASCADE, related_name='student', null=True, blank=True)    # Additional Info
+    parent = models.OneToOneField(Parent, on_delete=models.CASCADE, related_name='student', null=True, blank=True)
     address = models.TextField()
 
     class Meta:
@@ -117,7 +49,3 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.student_id})"
-    
-
-
-

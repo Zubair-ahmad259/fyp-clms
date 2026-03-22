@@ -33,12 +33,16 @@ INSTALLED_APPS = [
     'deptts',
     'teachers',
     'student',
-    'subjects',
-    'ddc',
+    'subject',
+    'ddcomit',
     'head',
     'fee_system',
     'stu',
-
+    'Academic',
+    'exam_mang',
+    'attendance',
+    'token_app',
+     'timetable',
 
 ]
 
@@ -133,12 +137,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
+# settings.py - EMAIL CONFIGURATION
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'za0557165@gmail.com'
-EMAIL_HOST_PASSWORD = 'zudr ybrn ylzc nmkz'    # replace with Gmail App Password
+EMAIL_HOST_USER = 'zk7233103@gmail.com'
+EMAIL_HOST_PASSWORD = 'pfui rdgt dxuv ghyn'  # Your Gmail app password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Remove or comment this line if it exists:
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
