@@ -120,22 +120,22 @@ body {
                 </li>
                 
                 <li class="menu-header">Attendance</li>
-                <li><a href="{% url 'add_attendance' %}"><i class="fas fa-chart-bar"></i>  attendance</a></li>
+                {% comment %} <li><a href="{% url 'add_attendance' %}"><i class="fas fa-chart-bar"></i>  attendance</a></li> {% endcomment %}
                 <li><a href="{% url 'attendance_list' %}"><i class="fas fa-chart-bar"></i>  attendance_list</a></li>
-                <li><a href="{% url 'attendance_record' %}"><i class="fas fa-chart-bar"></i>  attendance_record</a></li>
-                <li><a href="{% url 'attendance_report' %}"><i class="fas fa-chart-bar"></i>  attendance_record</a></li>
+                {% comment %} <li><a href="{% url 'attendance_record' %}"><i class="fas fa-chart-bar"></i>  attendance_record</a></li> {% endcomment %}
+                {% comment %} <li><a href="{% url 'attendance_report' %}"><i class="fas fa-chart-bar"></i>  attendance_record</a></li> {% endcomment %}
 
                 <li class="menu-header">Results</li>
-                <li><a href="{% url 'exam:create_exam_view' %}" class="{% if request.resolver_match.url_name == 'create_exam_view' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Create Exam</a></li>
-                <li><a href="{% url 'exam:exam_filter_view' %}"><i class="fas fa-edit"></i> Manage Exams</a></li>
-                <li><a href="{% url 'exam:comprehensive_results_view' %}"><i class="fas fa-chart-bar"></i> Results Analysis</a></li>
+                {% comment %} <li><a href="{% url 'exam:create_exam_view' %}" class="{% if request.resolver_match.url_name == 'create_exam_view' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Create Exam</a></li> {% endcomment %}
+                {% comment %} <li><a href="{% url 'exam:exam_filter_view' %}"><i class="fas fa-edit"></i> Manage Exams</a></li> {% endcomment %}
+                {% comment %} <li><a href="{% url 'exam:comprehensive_results_view' %}"><i class="fas fa-chart-bar"></i> Results Analysis</a></li> {% endcomment %}
                 
                 <li class="menu-header">DDC</li>
                 <li><a href="{% url 'case_list' %}"><i class="fas fa-briefcase"></i> View All Cases</a></li>
                 
                 <li class="menu-header">Assignments</li>
-                <li><a href="{% url 'assignment_create' %}"><i class="fas fa-plus-circle"></i> Create Assignment</a></li>
-                <li><a href="{% url 'assignment_list' %}"><i class="fas fa-list"></i> List Assignments</a></li>
+                {% comment %} <li><a href="{% url 'assignment_create' %}"><i class="fas fa-plus-circle"></i> Create Assignment</a></li> {% endcomment %}
+                {% comment %} <li><a href="{% url 'assignment_list' %}"><i class="fas fa-list"></i> List Assignments</a></li> {% endcomment %}
                 <li><a href="#"><i class="fas fa-file-upload"></i> Submissions</a></li>
                 <li><a href="#"><i class="fas fa-check-circle"></i> Grade Assignments</a></li>
                 

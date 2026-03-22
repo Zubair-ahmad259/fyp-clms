@@ -121,7 +121,17 @@
                         <ul>
                            <li><a href="{% url "teacher_list" %}">Teacher List</a></li>
                            <li><a href="{% url "add_teacher" %}">Teacher Add</a></li>
-                                     <li><a href="{% url "token_dashboard" %}">Teacher Add</a></li>
+
+                           
+
+                        </ul>
+                     </li>
+
+                             <li class="submenu">
+                        <a href="#"><i class="fas fa-chalkboard-teacher"></i> <span> heads</span> <span class="menu-arrow"></span></a>
+                        <ul>
+                           {% comment %} <li><a href="{% url "" %}">head List</a></li> {% endcomment %}
+                           <li><a href="{% url "admin_profile:admin_profile_create" %}">add Add</a></li>
 
                            
 
@@ -131,11 +141,13 @@
                                  <li class="submenu">
                         <a href="#"><i class="fas fa-shield-alt"></i> <span> Authentication </span> <span class="menu-arrow"></span></a>
                         <ul>
-                           {% comment %} <li><a href="{% url '#' %}">Login</a></li> {% endcomment %}
-                           <li><a href="{% url 'signup' %}">Students Registeration</a></li>
-                           <li><a href="{% url 'manage_teachers_view' %}">Teacher Registeration</a></li>
+                           <li><a href="{% url 'manage_students_view' %}">Students Registeration</a></li>
+                           {% comment %} <li><a hrefl="{% url 'manage_teachers_view' %}">Teacher Registeration</a></li> {% endcomment %}
+                           {% comment %} <li><a hrefl="{% url 'manage_teachers_view' %}">Teacher Registeration</a></li> {% endcomment %}
                         
-                           <li><a href="{% url "manage_admins_view" %} ">Admin Registeration</a></li>
+                           <li><a href="{% url 'manage_admins' %} ">Admin Registeration</a></li>
+                           <li><a href="{% url 'manage_teachers' %}">manage teacher</a></li>
+
                         </ul>
                      </li>
                
@@ -234,6 +246,8 @@
                      <li class="submenu">
                      <a href="#"><i class="fas fa-shield-alt"></i> <span> Attendance Traking </span> <span class="menu-arrow"></span></a>           
                      <li><a href="{% url 'attendance_dashboard' %}">attendance dashboard </a></li>
+
+                     <a href="{% url 'token_app:dashboard' %}">Dashboard</a>
 
                   </li>
                   

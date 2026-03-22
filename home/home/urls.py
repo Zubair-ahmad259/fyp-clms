@@ -17,7 +17,9 @@ urlpatterns = [
     path('Academic', include("Academic.urls")),
     path('exam_mang', include("exam_mang.urls")),
     path('attendance', include("attendance.urls")),
-    path('qr_tokens', include("qr_tokens.urls")),
+    path('token_app', include("token_app.urls")),
+    path('timetable', include("timetable.urls")),
+
 
 
 

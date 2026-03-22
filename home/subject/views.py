@@ -816,15 +816,49 @@ def get_prerequisite_suggestions(request):
 
 # API endpoint to get sections based on discipline and batch
 @csrf_exempt
+# def get_sections_for_discipline(request):
+#     if request.method == 'GET':
+#         discipline_id = request.GET.get('discipline_id')
+#         batch_id = request.GET.get('batch_id')
+        
+#         if not discipline_id:
+#             return JsonResponse({'error': 'Missing discipline parameter'}, status=400)
+        
+#         try:
+#             # Get sections for discipline
+#             sections = Section.objects.filter(discipline_id=discipline_id)
+            
+#             # Filter by batch if provided
+#             if batch_id:
+#                 sections = sections.filter(batch_id=batch_id)
+            
+#             data = [{
+#                 'id': section.id,
+#                 'name': section.name,
+#                 'batch': section.batch.name if section.batch else '',
+#                 'display': f"{section.name} - {section.batch.name if section.batch else 'All Batches'}"
+#             } for section in sections]
+            
+#             return JsonResponse({'sections': data})
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
+    
+#     return JsonResponse({'error': 'Invalid request method'}, status=400)
+@csrf_exempt
 def get_sections_for_discipline(request):
+    """API endpoint to get sections based on discipline and batch"""
     if request.method == 'GET':
         discipline_id = request.GET.get('discipline_id')
         batch_id = request.GET.get('batch_id')
+        
+        print(f"API called with discipline_id={discipline_id}, batch_id={batch_id}")
         
         if not discipline_id:
             return JsonResponse({'error': 'Missing discipline parameter'}, status=400)
         
         try:
+            from Academic.models import Section
+            
             # Get sections for discipline
             sections = Section.objects.filter(discipline_id=discipline_id)
             
@@ -839,13 +873,14 @@ def get_sections_for_discipline(request):
                 'display': f"{section.name} - {section.batch.name if section.batch else 'All Batches'}"
             } for section in sections]
             
+            print(f"Found {len(data)} sections")
             return JsonResponse({'sections': data})
+            
         except Exception as e:
+            print(f"Error: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=400)
-
-
 # API endpoint to get batches for discipline
 @csrf_exempt
 def get_batches_for_discipline(request):
@@ -883,7 +918,6 @@ def stu_subject(request):
 
     return render(request, "students/subject.html", {"subjects": subjects})
 
-
 def add_subject_assign(request):
     if request.method == "POST":
         # Get all form data
@@ -891,16 +925,16 @@ def add_subject_assign(request):
         subject_id = request.POST.get("subject")
         batch_id = request.POST.get("batch")
         semester_id = request.POST.get("semester")
-        section_id = request.POST.get("section")
+        section_ids = request.POST.getlist("sections")  # Changed to getlist for multiple sections
         discipline_id = request.POST.get("disciplines")
         
-        if not all([teacher_id, subject_id, batch_id, semester_id, section_id, discipline_id]):
+        if not all([teacher_id, subject_id, batch_id, semester_id, section_ids, discipline_id]):
             missing_fields = []
             if not teacher_id: missing_fields.append("Teacher")
             if not subject_id: missing_fields.append("Subject")
             if not batch_id: missing_fields.append("Batch")
             if not semester_id: missing_fields.append("Semester")
-            if not section_id: missing_fields.append("Section")
+            if not section_ids: missing_fields.append("Sections")
             if not discipline_id: missing_fields.append("Discipline")
             
             messages.error(request, f"Missing fields: {', '.join(missing_fields)}")
@@ -910,30 +944,36 @@ def add_subject_assign(request):
         subject = get_object_or_404(Subject, id=subject_id)
         batch = get_object_or_404(Batch, id=batch_id)
         semester = get_object_or_404(Semester, id=semester_id)
-        section = get_object_or_404(Section, id=section_id)
         discipline = get_object_or_404(Discipline, id=discipline_id)
 
-        if SubjectAssign.objects.filter(
+        # Check if assignment exists (without section check)
+        existing_assignment = SubjectAssign.objects.filter(
             teacher=teacher,
             subject=subject,
             batch=batch,
             semester=semester,
-            section=section,
             discipline=discipline
-        ).exists():
-            messages.warning(request, "This subject is already assigned.")
+        ).first()
+        
+        if existing_assignment:
+            # Add new sections to existing assignment
+            existing_assignment.sections.add(*section_ids)
+            messages.success(request, f"Sections added to existing assignment for {subject.name}.")
         else:
-            SubjectAssign.objects.create(
+            # Create new assignment
+            subject_assign = SubjectAssign.objects.create(
                 teacher=teacher,
                 subject=subject,
                 batch=batch,
                 semester=semester,
-                section=section,
                 discipline=discipline,
                 is_active=True
             )
-            messages.success(request, "Subject assigned successfully.")
-            return redirect("subject:show_subject_assign")
+            # Add sections
+            subject_assign.sections.set(section_ids)
+            messages.success(request, "Subject assigned successfully with multiple sections.")
+        
+        return redirect("subject:show_subject_assign")
 
     context = {
         "teachers": Teacher.objects.all(),
@@ -947,22 +987,53 @@ def add_subject_assign(request):
     return render(request, "subject/add-subject-assign.html", context)
 
 
+# API endpoint to get sections based on discipline, batch, and semester
+@csrf_exempt
+def get_sections_for_assignment(request):
+    if request.method == 'GET':
+        discipline_id = request.GET.get('discipline_id')
+        batch_id = request.GET.get('batch_id')
+        semester_id = request.GET.get('semester_id')
+        
+        if not all([discipline_id, batch_id, semester_id]):
+            return JsonResponse({'error': 'Missing required parameters'}, status=400)
+        
+        try:
+            # Get sections for discipline and batch
+            sections = Section.objects.filter(
+                discipline_id=discipline_id,
+                batch_id=batch_id
+            )
+            
+            # Optional: Filter by semester if sections have semester field
+            # if hasattr(Section, 'semester'):
+            #     sections = sections.filter(semester_id=semester_id)
+            
+            data = [{
+                'id': section.id,
+                'name': section.name,
+                'batch': section.batch.name if section.batch else '',
+                'display': f"{section.name} - {section.batch.name if section.batch else 'All Batches'}"
+            } for section in sections]
+            
+            return JsonResponse({'sections': data})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 def show_subject_assign(request):
     assigns = SubjectAssign.objects.select_related(
         "teacher", 
         "subject", 
         "batch", 
         "semester", 
-        "section",
         "discipline"
-    ).order_by('-id')
+    ).prefetch_related("sections").order_by('-id')
     
     context = {
         "assigns": assigns
     }
     return render(request, "subject/show-subject-assign-record.html", context)
-
-
 # Check prerequisites for a student
 def check_student_prerequisites(request, student_id):
     student = get_object_or_404(Student, id=student_id)

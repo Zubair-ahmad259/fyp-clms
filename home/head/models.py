@@ -3,7 +3,6 @@ from home_auth.models import CustomUser
 from student.models import Discipline
 
 class AdminProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="admin_profile")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     father_name = models.CharField(max_length=100)

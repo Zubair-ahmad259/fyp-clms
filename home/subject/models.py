@@ -175,8 +175,6 @@ class Subject(models.Model):
         verbose_name_plural = "Subjects"
         ordering = ['semester__number', 'code']
         unique_together = ['code', 'semester', 'desciplain', 'section']
-
-
 class SubjectAssign(models.Model):
     teacher = models.ForeignKey(
         Teacher,
@@ -210,12 +208,11 @@ class SubjectAssign(models.Model):
         help_text="Select the semester for this assignment"
     )
 
-    section = models.ForeignKey(
+    sections = models.ManyToManyField(
         Section,
-        on_delete=models.CASCADE,
         related_name="subject_assignments",
-        verbose_name="Section",
-        help_text="Select the section for this assignment"
+        verbose_name="Sections",
+        help_text="Select multiple sections for this assignment"
     )
 
     assigned_date = models.DateField(
@@ -237,9 +234,20 @@ class SubjectAssign(models.Model):
     class Meta:
         verbose_name = "Subject Assignment"
         verbose_name_plural = "Subject Assignments"
-        unique_together = ['teacher', 'subject', 'batch', 'semester', 'section']
+        unique_together = ['teacher', 'subject', 'batch', 'semester']
         ordering = ['teacher', 'subject']
 
     def __str__(self):
-        discipline_name = self.subject.desciplain.name if self.subject.desciplain else "No Discipline"
-        return f"{self.subject.code} - {self.subject.name} (Sem {self.subject.semester.number}) - {discipline_name}"
+        # Fix: Use 'field' instead of 'name' for Discipline
+        discipline_name = self.discipline.field if self.discipline else "No Discipline"
+        
+        # Get sections for display
+        sections_list = list(self.sections.all())
+        if sections_list:
+            sections_str = ", ".join([s.name for s in sections_list[:3]])
+            if len(sections_list) > 3:
+                sections_str += f" and {len(sections_list) - 3} more"
+        else:
+            sections_str = "No Sections"
+        
+        return f"{self.subject.code} - {self.subject.name} (Sem {self.semester.number}) - {discipline_name} - Sections: {sections_str}"

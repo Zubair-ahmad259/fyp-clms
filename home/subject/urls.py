@@ -1,12 +1,10 @@
-
 from django.urls import path
 from . import views
 
-app_name = 'subject'  # Add this line for namespace
+app_name = 'subject'
 
 urlpatterns = [
-       # DASHBOARD URLS
-    # ==============================================
+    # DASHBOARD URLS
     path('dashboard/', views.subject_dashboard, name='subject_dashboard'),
     path('dashboard/overview/', views.dashboard_overview, name='dashboard_overview'),
     path('dashboard/analytics/', views.subject_analytics, name='subject_analytics'),
@@ -33,7 +31,8 @@ urlpatterns = [
     # API endpoints
     path('api/batches-for-discipline/', views.get_batches_for_discipline, name='get_batches_for_discipline'),
     path('api/prerequisite-suggestions/', views.get_prerequisite_suggestions, name='prerequisite_suggestions'),
-    path('api/get-sections/', views.get_sections_for_discipline, name='get_sections_for_discipline'),
+    path('api/get-sections/', views.get_sections_for_discipline, name='get_sections_for_discipline'),  # THIS MUST EXIST
+    path('api/get-sections-for-assignment/', views.get_sections_for_discipline, name='get_sections_for_assignment'),
     
     # Debug URLs
     path('debug/all/', views.show_all_subjects, name='show_all_subjects'),

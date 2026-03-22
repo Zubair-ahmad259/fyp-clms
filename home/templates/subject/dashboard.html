@@ -393,7 +393,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for assignment in latest_assignments %}
+                                    {% comment %} {% for assignment in latest_assignments %} {% endcomment %}
                                     <tr>
                                         <td><strong>{{ assignment.subject.code }}</strong></td>
                                         <td>{{ assignment.teacher.first_name }} {{ assignment.teacher.last_name }}</td>
@@ -407,11 +407,11 @@
                                             {% endif %}
                                         </td>
                                     </tr>
-                                    {% empty %}
+                                    {% comment %} {% empty %} {% endcomment %}
                                     <tr>
                                         <td colspan="5" class="text-center text-muted">No recent assignments</td>
                                     </tr>
-                                    {% endfor %}
+                                    {% comment %} {% endfor %} {% endcomment %}
                                 </tbody>
                             </table>
                         </div>

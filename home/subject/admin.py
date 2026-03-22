@@ -172,15 +172,66 @@ class SubjectAdmin(admin.ModelAdmin):
         extra_context['import_url'] = '/admin/subject/subject/import/'  # Customize as needed
         return super().changelist_view(request, extra_context=extra_context)
 
-
 @admin.register(SubjectAssign)
 class SubjectAssignAdmin(admin.ModelAdmin):
-    list_display = ('subject', 'teacher', 'batch', 'semester_display', 'section', 'discipline', 'assigned_date', 'is_active')
-    list_filter = ('batch', 'semester', 'section', 'discipline', 'is_active')
-    search_fields = ('subject__code', 'subject__name', 'teacher__name')
+    list_display = ('subject', 'teacher', 'batch', 'semester_display', 'sections_display', 'discipline_display', 'assigned_date', 'is_active')
+    list_filter = ('batch', 'semester', 'discipline', 'is_active')
+    search_fields = ('subject__code', 'subject__name', 'teacher__first_name', 'teacher__last_name')
+    filter_horizontal = ('sections',)
     list_per_page = 20
+    
+    fieldsets = (
+        ('Assignment Details', {
+            'fields': ('teacher', 'subject', 'batch', 'semester', 'sections', 'discipline')
+        }),
+        ('Status', {
+            'fields': ('is_active', 'assigned_date')
+        }),
+    )
+    
+    readonly_fields = ('assigned_date',)
     
     def semester_display(self, obj):
         return f"Sem {obj.semester.number}"
     semester_display.short_description = 'Semester'
     semester_display.admin_order_field = 'semester__number'
+    
+    def sections_display(self, obj):
+        """Display sections as a comma-separated list"""
+        sections = obj.sections.all()
+        if sections:
+            return ", ".join([section.name for section in sections])
+        return "No sections"
+    sections_display.short_description = 'Sections'
+    
+    def discipline_display(self, obj):
+        """Display discipline field name"""
+        return obj.discipline.field if obj.discipline else "No Discipline"
+    discipline_display.short_description = 'Discipline'
+    discipline_display.admin_order_field = 'discipline'
+    
+    actions = ['export_assignments_csv']
+    
+    def export_assignments_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=subject_assignments.csv'
+        
+        writer = csv.writer(response)
+        writer.writerow(['Subject Code', 'Subject Name', 'Teacher', 'Batch', 'Semester', 'Sections', 'Discipline', 'Assigned Date', 'Status'])
+        
+        for obj in queryset:
+            sections = ", ".join([s.name for s in obj.sections.all()])
+            writer.writerow([
+                obj.subject.code,
+                obj.subject.name,
+                f"{obj.teacher.first_name} {obj.teacher.last_name}",
+                obj.batch.name,
+                f"Sem {obj.semester.number}",
+                sections,
+                obj.discipline.field if obj.discipline else '',
+                obj.assigned_date,
+                'Active' if obj.is_active else 'Inactive'
+            ])
+        
+        return response
+    export_assignments_csv.short_description = "Export selected assignments as CSV"
